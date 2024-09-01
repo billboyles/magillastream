@@ -33,3 +33,6 @@ venv
 
 # Ignore build dir
 build/
+
+# Ignore spec file
+*.spec
