@@ -1,8 +1,19 @@
 import os
+import sys
 
-# Define the paths
-nginx_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'nginx'))
-ffmpeg_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'ffmpeg'))
+def resource_path(relative_path):
+    try:
+        # PyInstaller stores the path in _MEIPASS when running as an executable
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # If not running as an executable, get the absolute path of the current directory
+        base_path = os.path.abspath(os.path.dirname(__file__))
+
+    return os.path.join(base_path, relative_path)
+
+# Define paths using resource_path
+nginx_path = resource_path('nginx')
+ffmpeg_path = resource_path('ffmpeg')
 conf_dir = os.path.join(nginx_path, 'conf')
 nginx_conf_file = os.path.join(conf_dir, 'nginx.conf')
 rtmp_conf_file = os.path.join(conf_dir, 'rtmp.conf')
