@@ -1,0 +1,32 @@
+# Ignore pickle files
+*.pkl
+
+# Ignore Python bytecode files
+*.pyc
+__pycache__/
+*.pyo
+
+# Ignore log files
+*.log
+*.log.*
+
+# Ignore config pickle
+config.pkl
+
+# Ignore files in log dir
+nginx/logs/*
+
+# Ignorre generated rtmp config file
+nginx/conf/rtmp.conf
+
+# Ignore files in temp dir
+nginx/temp/*
+
+# Ignore files in temp dir
+nginx/temp/*
+
+# Ignore venv config
+pyvenv.cfg
+
+# Ignore venv
+venv
