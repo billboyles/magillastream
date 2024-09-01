@@ -1,9 +1,18 @@
 import os
 import pickle
+from pathlib import Path
 
-# Paths to configuration files
-root_dir = os.path.dirname(__file__)
-config_pickle_file = os.path.join(root_dir, 'config.pkl')
+# Function to get the configuration save path
+def get_config_save_path():
+    if os.name == 'nt':  # Windows
+        return Path(os.getenv('APPDATA')) / "MagillaStream"
+    else:  # For Linux/MacOS, use home directory
+        return Path.home() / ".magillastream"
+
+# Define the paths for saving configuration files
+config_save_path = get_config_save_path()
+config_save_path.mkdir(parents=True, exist_ok=True)
+config_pickle_file = config_save_path / "config.pkl"
 
 # Updated default configuration with encoder object
 default_config = {
@@ -21,7 +30,7 @@ default_config = {
 }
 
 def load_config():
-    if os.path.exists(config_pickle_file):
+    if config_pickle_file.exists():
         try:
             with open(config_pickle_file, 'rb') as file:
                 loaded_config = pickle.load(file)

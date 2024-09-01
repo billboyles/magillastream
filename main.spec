@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('nginx/nginx.exe', 'nginx'), ('nginx/conf/*', 'nginx/conf'), ('nginx/logs/*', 'nginx/logs'), ('nginx/temp/*', 'nginx/temp'), ('ffmpeg/*', 'ffmpeg/')],
+    datas=[('ffmpeg', 'ffmpeg'), ('nginx', 'nginx')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
