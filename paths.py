@@ -3,10 +3,10 @@ import sys
 
 def resource_path(relative_path):
     try:
-        # PyInstaller stores the path in _MEIPASS when running as an executable
+        # When running as a packaged executable, use the directory of the exe
         base_path = sys._MEIPASS
     except AttributeError:
-        # If not running as an executable, get the absolute path of the current directory
+        # If not running as an executable, use the absolute path of the current directory
         base_path = os.path.abspath(os.path.dirname(__file__))
 
     return os.path.join(base_path, relative_path)
