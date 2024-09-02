@@ -8,7 +8,7 @@ MagillaStream is a lightweight and portable RTMP server application that enables
 
 You can use MagillaStream several ways - by using the prebuilt EXE file, by building your own EXE from the source code, or by running the source code using PYthon. 
 
-### Using the EXE
+## Using the EXE
 
 1. Download the ZIP file [MagillaStream.zip](https://github.com/billboyles/magillastream/blob/main/MagillaStream.zip) containing the app EXE and other necessary components.
 
