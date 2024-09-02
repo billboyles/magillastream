@@ -14,9 +14,9 @@ You can use MagillaStream several ways - by using the prebuilt EXE file, by buil
 
 2. Unzip the file in a desired location, such as your home folder. 
 
-3. Run the EXE (you may want to add a shortcut to your desktop)
+3. Run the EXE (you may want to add a shortcut to your desktop).
 
-### Using the Source Files
+## Using the Source Files
 
 ### Prerequisites
 
