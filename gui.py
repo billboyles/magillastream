@@ -120,10 +120,10 @@ class StreamManagerApp:
     def load_config(self, config):
         self.incoming_app.insert(0, config.get("incoming_app", ""))
         self.incoming_port.insert(0, config.get("incoming_port", ""))
-        self.youtube_ingest_main.insert(0, config.get("youtube_primary_ingress_url", ""))
-        self.youtube_ingest_backup.insert(0, config.get("youtube_backup_ingress_url", ""))
+        self.youtube_ingest_main.insert(0, config.get("youtube_primary_ingest_url", ""))
+        self.youtube_ingest_backup.insert(0, config.get("youtube_backup_ingest_url", ""))
         self.youtube_stream_key.insert(0, config.get("youtube_stream_key", ""))
-        self.twitch_ingest_url.insert(0, config.get("twitch_ingress_url", ""))
+        self.twitch_ingest_url.insert(0, config.get("twitch_ingest_url", ""))
         self.twitch_stream_key.insert(0, config.get("twitch_key", ""))
 
         # Fetch and debug encoder data
@@ -148,10 +148,10 @@ class StreamManagerApp:
         config = {
             "incoming_app": self.incoming_app.get(),
             "incoming_port": self.incoming_port.get(),
-            "youtube_primary_ingress_url": self.youtube_ingest_main.get(),
-            "youtube_backup_ingress_url": self.youtube_ingest_backup.get(),
+            "youtube_primary_ingest_url": self.youtube_ingest_main.get(),
+            "youtube_backup_ingest_url": self.youtube_ingest_backup.get(),
             "youtube_stream_key": self.youtube_stream_key.get(),
-            "twitch_ingress_url": self.twitch_ingest_url.get(),
+            "twitch_ingest_url": self.twitch_ingest_url.get(),
             "twitch_key": self.twitch_stream_key.get(),
             "ffmpeg_encoder": (encoder_code, encoder_name, self.encoder_dict.get(encoder_name, ('', ''))[1]),  # Full encoder object
             "ffmpeg_resolution": resolution_value,  # Pass resolution value for FFmpeg
@@ -183,10 +183,10 @@ class StreamManagerApp:
         config = {
             "incoming_app": self.incoming_app.get(),
             "incoming_port": self.incoming_port.get(),
-            "youtube_primary_ingress_url": self.youtube_ingest_main.get(),
-            "youtube_backup_ingress_url": self.youtube_ingest_backup.get(),
+            "youtube_primary_ingest_url": self.youtube_ingest_main.get(),
+            "youtube_backup_ingest_url": self.youtube_ingest_backup.get(),
             "youtube_stream_key": self.youtube_stream_key.get(),
-            "twitch_ingress_url": self.twitch_ingest_url.get(),
+            "twitch_ingest_url": self.twitch_ingest_url.get(),
             "twitch_key": self.twitch_stream_key.get(),
             "ffmpeg_encoder": (encoder_code, encoder_name, container),
             "ffmpeg_resolution": resolution_value,  # Save resolution value
