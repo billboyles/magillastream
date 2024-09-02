@@ -74,11 +74,24 @@ In the GUI, you can configure the following FFmpeg settings:
 - **Bitrate (kbps):** Define the video bitrate (e.g., `6000`).
 - **Framerate (fps):** Set the framerate for the stream (e.g., `30`).
 
-## Nota Bene
+## Support and Improvements
 
-**THIS IS A WORK IN PROGRESS!**
+Please use Github to open an issue if you have questions, need support, encounter a bug, or have a suggestion for a new feature or enhancement. 
 
-I do not guarantee there are no bugs, but I have tested this end to end (including deleting it and following my own setup instructions) and it seems to work. If you use this and encounter a bug (there will be bugs), PLEASE PLEASE PLEASE let me know. If you use it and it's great, optionally also tell me, that would be cool to hear.
+If you would like to help develop and improve the app, please reach out.
+
+## Acknowledgements
+
+This simp project is dedicated to my favorite streamer, **Spirt Art Life**. You should check her out on [Youtube](https://www.youtube.com/@SpiritArtLife) or [Twitch](https://www.twitch.tv/spiritartlife) and give her a follow. It's the best way to support this project.
+
+Thank you to the following streamers for testing the app and providing early feedback:
+- Spirt Art Life | [Youtube](https://www.youtube.com/@SpiritArtLife) | [Twitch](https://www.twitch.tv/spiritartlife)
+- Spanj | [Youtube](https://www.youtube.com/@Spanj) | [Twitch](https://www.twitch.tv/spanj)
+- Johnny Jay Appleseed | [Youtube](https://www.youtube.com/@JohnnyJayAppleseed) | [Twitch](https://www.twitch.tv/johnnyjayappleseed)
+- Nerdlette Gaming | [Youtube](https://www.youtube.com/@NerdletteGaming) | [Twitch](https://www.twitch.tv/nerdlettegaming)
+- Ironwulf | [Youtube](https://www.youtube.com/@Ironwulf007) | [Twitch](https://www.twitch.tv/ironwulf007)
+
+Please check them out and give them a follow!
 
 ## License
 
