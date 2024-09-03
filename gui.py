@@ -52,17 +52,15 @@ class StreamManagerApp:
         tk.Label(root, text="Video Encoder:", anchor=tk.E).grid(row=1, column=2, sticky=tk.E, padx=10, pady=5)
         self.ffmpeg_encoder = ttk.Combobox(root, width=entry_width)
         self.ffmpeg_encoder.grid(row=1, column=3, padx=10, pady=5)
-        self.populate_encoder_dropdown()
 
         tk.Label(root, text="Resolution:", anchor=tk.E).grid(row=2, column=2, sticky=tk.E, padx=10, pady=5)
         self.ffmpeg_resolution = ttk.Combobox(root, width=entry_width)
         self.ffmpeg_resolution.grid(row=2, column=3, padx=10, pady=5)
-        self.populate_resolution_dropdown()
+        self.populate_resolution_dropdown()  # Initialize resolution dropdown
 
         tk.Label(root, text="Preset:", anchor=tk.E).grid(row=3, column=2, sticky=tk.E, padx=10, pady=5)
-        self.ffmpeg_preset = ttk.Combobox(root, width=entry_width)
+        self.ffmpeg_preset = ttk.Combobox(root, width=entry_width)  # Initialize ffmpeg_preset here
         self.ffmpeg_preset.grid(row=3, column=3, padx=10, pady=5)
-        self.populate_preset_dropdown()
 
         tk.Label(root, text="Bitrate (kbps):", anchor=tk.E).grid(row=4, column=2, sticky=tk.E, padx=10, pady=5)
         self.ffmpeg_bitrate = tk.Entry(root, width=entry_width)
@@ -93,6 +91,9 @@ class StreamManagerApp:
         tk.Button(button_frame, text="Stop Services", command=self.stop_services, width=button_width).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame, text="Save Configuration", command=self.save_config, width=button_width).pack(side=tk.LEFT, padx=5)
 
+        # Populate dropdowns before loading config
+        self.populate_encoder_dropdown()
+
         # Load initial configuration
         self.load_config(config)
 
@@ -121,7 +122,12 @@ class StreamManagerApp:
         if encoder_name in self.encoder_dict:
             presets = self.encoder_dict[encoder_name][2]  # Retrieve presets from the encoder_dict
             self.ffmpeg_preset['values'] = presets
-            self.ffmpeg_preset.set("medium")  # Set default preset
+            # If the preset name in the configuration is still valid for the current encoder, set it
+            config_preset = self.ffmpeg_preset.get()
+            if config_preset in presets:
+                self.ffmpeg_preset.set(config_preset)
+            else:
+                self.ffmpeg_preset.set("medium")  # Default preset if none matches
 
     def populate_resolution_dropdown(self):
         resolutions = {
@@ -146,12 +152,6 @@ class StreamManagerApp:
         self.audio_encoder['values'] = list(audio_encoders.keys())
         self.audio_encoder.set("AAC")  # Default to AAC
 
-    def mask_key(self, key):
-        if len(key) > 4:
-            return '*' * (len(key) - 4) + key[-4:]
-        else:
-            return key
-
     def set_entry_value(self, entry_widget, value):
         entry_widget.delete(0, tk.END)
         entry_widget.insert(0, value)
@@ -174,7 +174,15 @@ class StreamManagerApp:
             # Default values if the format is incorrect
             encoder_code, encoder_name, container = ('libx264', 'H.264 (libx264)', 'flv')
 
+        # Set the video encoder dropdown value and update the preset dropdown accordingly
         self.ffmpeg_encoder.set(encoder_name)
+        self.populate_preset_dropdown()  # This ensures that the presets are updated based on the selected encoder
+
+        # Set the preset value
+        preset_name = config.get("ffmpeg_preset", "medium")
+        self.ffmpeg_preset.set(preset_name)
+
+        # Set other fields
         self.ffmpeg_resolution.set(config.get("ffmpeg_resolution", "720p"))
         self.set_entry_value(self.ffmpeg_bitrate, config.get("ffmpeg_bitrate", "2500"))
         self.set_entry_value(self.ffmpeg_framerate, config.get("ffmpeg_framerate", "30"))
@@ -183,10 +191,6 @@ class StreamManagerApp:
         audio_encoder_name = config.get("audio_encoder", "AAC")
         self.audio_encoder.set(audio_encoder_name)
         self.set_entry_value(self.audio_bitrate, config.get("audio_bitrate", "192k"))
-
-        # Load preset settings if available
-        preset_name = config.get("ffmpeg_preset", "medium")
-        self.ffmpeg_preset.set(preset_name)
 
     def validate_config(self, config):
         required_fields = ["incoming_app", "incoming_port", "youtube_primary_ingest_url", "youtube_stream_key", "twitch_ingest_url", "twitch_key"]
@@ -199,7 +203,7 @@ class StreamManagerApp:
     def start_services(self):
         try:
             encoder_name = self.ffmpeg_encoder.get()
-            encoder_code, container = self.encoder_dict.get(encoder_name, ('libx264', 'flv'))
+            encoder_code, container, _ = self.encoder_dict.get(encoder_name, ('libx264', 'flv', []))
             resolution_name = self.ffmpeg_resolution.get()
             resolution_value = self.resolution_dict.get(resolution_name, "1280x720")  # Default to 720p
             audio_encoder_name = self.audio_encoder.get()

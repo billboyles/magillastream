@@ -7,6 +7,8 @@ def main():
     # Load the configuration
     config = load_config()
 
+    print(config)
+
     # Create the main application window
     root = tk.Tk()
     app = StreamManagerApp(root, start_services, stop_services, save_config, config)
