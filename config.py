@@ -14,7 +14,7 @@ config_save_path = get_config_save_path()
 config_save_path.mkdir(parents=True, exist_ok=True)
 config_pickle_file = config_save_path / "config.pkl"
 
-# Updated default configuration with encoder object and audio settings
+# Updated default configuration with encoder object, preset, and audio settings
 default_config = {
     "youtube_stream_key": "YOUR_YOUTUBE_STREAM_KEY",
     "twitch_key": "YOUR_TWITCH_STREAM_KEY",
@@ -27,7 +27,8 @@ default_config = {
     "ffmpeg_resolution": "1920x1080",
     "ffmpeg_bitrate": "6000",
     "ffmpeg_framerate": "30",
-    "audio_encoder": "AAC",       # Default audio encoder
+    "ffmpeg_preset": "medium",     # Default video preset
+    "audio_encoder": "AAC",        # Default audio encoder
     "audio_bitrate": "192k"        # Default audio bitrate
 }
 
@@ -50,6 +51,10 @@ def load_config():
                     loaded_config["audio_encoder"] = default_config["audio_encoder"]
                 if "audio_bitrate" not in loaded_config:
                     loaded_config["audio_bitrate"] = default_config["audio_bitrate"]
+
+                # Validate preset
+                if "ffmpeg_preset" not in loaded_config:
+                    loaded_config["ffmpeg_preset"] = default_config["ffmpeg_preset"]
                 
                 return loaded_config
         except (pickle.PickleError, IOError) as e:
