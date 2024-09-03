@@ -24,6 +24,7 @@ class ThemeManager:
             "active_fg": "#ffffff"
         }
         self.current_theme = self.light_theme
+        self.style = ttk.Style()
 
     def apply_theme(self, root, dark_mode):
         self.current_theme = self.dark_theme if dark_mode else self.light_theme
@@ -33,7 +34,7 @@ class ThemeManager:
     def update_widget_styles(self, root):
         for widget in root.winfo_children():
             self.style_widget(widget)
-            if isinstance(widget, tk.Frame) or isinstance(widget, tk.LabelFrame):
+            if isinstance(widget, (tk.Frame, tk.LabelFrame)):
                 self.update_widget_styles(widget)
 
     def style_widget(self, widget):
@@ -53,11 +54,16 @@ class ThemeManager:
                 activeforeground=self.current_theme["active_fg"]
             )
         elif isinstance(widget, ttk.Combobox):
-            style = ttk.Style()
-            style.theme_use('default')
-            style.configure('TCombobox', 
+            self.style.theme_use('default')
+            self.style.configure('TCombobox', 
                 fieldbackground=self.current_theme["entry_bg"],
                 background=self.current_theme["entry_bg"], 
-                foreground=self.current_theme["entry_fg"]
+                foreground=self.current_theme["entry_fg"],
+                arrowcolor=self.current_theme["entry_fg"]
             )
-
+            widget.configure(style='TCombobox')
+        else:
+            try:
+                widget.configure(bg=self.current_theme["bg"], fg=self.current_theme["fg"])
+            except tk.TclError:
+                pass  # Skip widgets that do not support bg/fg configuration
