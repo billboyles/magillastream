@@ -165,18 +165,28 @@ class StreamManagerApp:
         self.twitch_ingest_url.insert(0, config.get("twitch_ingest_url", ""))
         self.twitch_stream_key.insert(0, config.get("twitch_key", ""))
 
-        # Fetch and debug encoder data
+        # Fetch and validate encoder data
         encoder_data = config.get("ffmpeg_encoder", ('libx264', 'H.264 (libx264)', 'flv'))
 
-        if isinstance(encoder_data, tuple) and len(encoder_data) == 3:
-            encoder_code, encoder_name, container = encoder_data
+        if isinstance(encoder_data, tuple) and len(encoder_data) >= 3:
+            encoder_code, encoder_name, container = encoder_data[:3]  # Ensure at least 3 elements
         else:
             # Default values if the format is incorrect
             encoder_code, encoder_name, container = ('libx264', 'H.264 (libx264)', 'flv')
 
-        # Set the video encoder dropdown value and update the preset dropdown accordingly
+        # Set the video encoder dropdown value
         self.ffmpeg_encoder.set(encoder_name)
-        self.populate_preset_dropdown()  # This ensures that the presets are updated based on the selected encoder
+
+        # Re-populate encoder_dict to ensure it's up-to-date
+        self.encoder_dict = {name: (code, container, presets) for code, name, container, presets in list_ffmpeg_encoders()}
+
+        # Ensure encoder_name exists in the populated list; otherwise, default to the first available option
+        if encoder_name not in self.encoder_dict:
+            encoder_name = list(self.encoder_dict.keys())[0]
+            self.ffmpeg_encoder.set(encoder_name)
+
+        # Populate preset dropdown after encoder_dict is refreshed
+        self.populate_preset_dropdown()
 
         # Set the preset value
         preset_name = config.get("ffmpeg_preset", "medium")
