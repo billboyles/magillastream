@@ -6,7 +6,7 @@ class StreamManagerApp:
     def __init__(self, root, start_services_callback, stop_services_callback, save_config_callback, config):
         self.root = root
         self.root.title("Stream Manager")
-        self.root.geometry("900x450")  # Adjusted window size to accommodate new fields
+        self.root.geometry("900x500")  # Adjusted window size to accommodate new fields
 
         self.start_services_callback = start_services_callback
         self.stop_services_callback = stop_services_callback
@@ -59,23 +59,28 @@ class StreamManagerApp:
         self.ffmpeg_resolution.grid(row=2, column=3, padx=10, pady=5)
         self.populate_resolution_dropdown()
 
-        tk.Label(root, text="Bitrate (kbps):", anchor=tk.E).grid(row=3, column=2, sticky=tk.E, padx=10, pady=5)
-        self.ffmpeg_bitrate = tk.Entry(root, width=entry_width)
-        self.ffmpeg_bitrate.grid(row=3, column=3, padx=10, pady=5)
+        tk.Label(root, text="Preset:", anchor=tk.E).grid(row=3, column=2, sticky=tk.E, padx=10, pady=5)
+        self.ffmpeg_preset = ttk.Combobox(root, width=entry_width)
+        self.ffmpeg_preset.grid(row=3, column=3, padx=10, pady=5)
+        self.populate_preset_dropdown()
 
-        tk.Label(root, text="Framerate (fps):", anchor=tk.E).grid(row=4, column=2, sticky=tk.E, padx=10, pady=5)
+        tk.Label(root, text="Bitrate (kbps):", anchor=tk.E).grid(row=4, column=2, sticky=tk.E, padx=10, pady=5)
+        self.ffmpeg_bitrate = tk.Entry(root, width=entry_width)
+        self.ffmpeg_bitrate.grid(row=4, column=3, padx=10, pady=5)
+
+        tk.Label(root, text="Framerate (fps):", anchor=tk.E).grid(row=5, column=2, sticky=tk.E, padx=10, pady=5)
         self.ffmpeg_framerate = tk.Entry(root, width=entry_width)
-        self.ffmpeg_framerate.grid(row=4, column=3, padx=10, pady=5)
+        self.ffmpeg_framerate.grid(row=5, column=3, padx=10, pady=5)
 
         # FFmpeg Audio Fields
-        tk.Label(root, text="Audio Encoder:", anchor=tk.E).grid(row=5, column=2, sticky=tk.E, padx=10, pady=5)
+        tk.Label(root, text="Audio Encoder:", anchor=tk.E).grid(row=6, column=2, sticky=tk.E, padx=10, pady=5)
         self.audio_encoder = ttk.Combobox(root, width=entry_width)
-        self.audio_encoder.grid(row=5, column=3, padx=10, pady=5)
+        self.audio_encoder.grid(row=6, column=3, padx=10, pady=5)
         self.populate_audio_encoder_dropdown()
 
-        tk.Label(root, text="Audio Bitrate (kbps):", anchor=tk.E).grid(row=6, column=2, sticky=tk.E, padx=10, pady=5)
+        tk.Label(root, text="Audio Bitrate (kbps):", anchor=tk.E).grid(row=7, column=2, sticky=tk.E, padx=10, pady=5)
         self.audio_bitrate = tk.Entry(root, width=entry_width)
-        self.audio_bitrate.grid(row=6, column=3, padx=10, pady=5)
+        self.audio_bitrate.grid(row=7, column=3, padx=10, pady=5)
         self.audio_bitrate.insert(0, "192k")  # Default to 192k
 
         # Frame for buttons
@@ -96,16 +101,27 @@ class StreamManagerApp:
 
     def populate_encoder_dropdown(self):
         encoders_list = list_ffmpeg_encoders()
-        # Map human-readable names to tuples of (code, container)
-        self.encoder_dict = {name: (code, container) for code, name, container in encoders_list}
+        # Map human-readable names to tuples of (code, container, presets)
+        self.encoder_dict = {name: (code, container, presets) for code, name, container, presets in encoders_list}
         # Set dropdown values to user-friendly names
         self.ffmpeg_encoder['values'] = list(self.encoder_dict.keys())
         # Set default value if available
-        current_encoder = self.ffmpeg_encoder.get()
-        if current_encoder in self.encoder_dict:
-            self.ffmpeg_encoder.set(current_encoder)
-        else:
-            self.ffmpeg_encoder.set(list(self.encoder_dict.keys())[0] if self.encoder_dict else '')
+        if self.ffmpeg_encoder['values']:
+            self.ffmpeg_encoder.set(self.ffmpeg_encoder['values'][0])
+            self.populate_preset_dropdown()  # Populate preset dropdown based on the default encoder
+
+        # Bind the change event to update presets when the encoder changes
+        self.ffmpeg_encoder.bind("<<ComboboxSelected>>", self.on_encoder_change)
+
+    def on_encoder_change(self, event):
+        self.populate_preset_dropdown()
+
+    def populate_preset_dropdown(self):
+        encoder_name = self.ffmpeg_encoder.get()
+        if encoder_name in self.encoder_dict:
+            presets = self.encoder_dict[encoder_name][2]  # Retrieve presets from the encoder_dict
+            self.ffmpeg_preset['values'] = presets
+            self.ffmpeg_preset.set("medium")  # Set default preset
 
     def populate_resolution_dropdown(self):
         resolutions = {
@@ -168,6 +184,10 @@ class StreamManagerApp:
         self.audio_encoder.set(audio_encoder_name)
         self.set_entry_value(self.audio_bitrate, config.get("audio_bitrate", "192k"))
 
+        # Load preset settings if available
+        preset_name = config.get("ffmpeg_preset", "medium")
+        self.ffmpeg_preset.set(preset_name)
+
     def validate_config(self, config):
         required_fields = ["incoming_app", "incoming_port", "youtube_primary_ingest_url", "youtube_stream_key", "twitch_ingest_url", "twitch_key"]
         for field in required_fields:
@@ -179,11 +199,12 @@ class StreamManagerApp:
     def start_services(self):
         try:
             encoder_name = self.ffmpeg_encoder.get()
-            encoder_code, _ = self.encoder_dict.get(encoder_name, ('libx264', ''))
+            encoder_code, container = self.encoder_dict.get(encoder_name, ('libx264', 'flv'))
             resolution_name = self.ffmpeg_resolution.get()
             resolution_value = self.resolution_dict.get(resolution_name, "1280x720")  # Default to 720p
             audio_encoder_name = self.audio_encoder.get()
             audio_encoder_code = self.audio_encoder_dict.get(audio_encoder_name, "aac")
+            preset_name = self.ffmpeg_preset.get()
             config = {
                 "incoming_app": self.incoming_app.get(),
                 "incoming_port": self.incoming_port.get(),
@@ -192,10 +213,11 @@ class StreamManagerApp:
                 "youtube_stream_key": self.youtube_stream_key.get(),
                 "twitch_ingest_url": self.twitch_ingest_url.get(),
                 "twitch_key": self.twitch_stream_key.get(),
-                "ffmpeg_encoder": (encoder_code, encoder_name, self.encoder_dict.get(encoder_name, ('', ''))[1]),
+                "ffmpeg_encoder": (encoder_code, encoder_name, container),
                 "ffmpeg_resolution": resolution_value,
                 "ffmpeg_bitrate": self.ffmpeg_bitrate.get(),
                 "ffmpeg_framerate": self.ffmpeg_framerate.get(),
+                "ffmpeg_preset": preset_name,
                 "audio_encoder": audio_encoder_name,
                 "audio_bitrate": self.audio_bitrate.get()
             }
@@ -228,6 +250,8 @@ class StreamManagerApp:
         audio_encoder_name = self.audio_encoder.get()
         audio_encoder_code = self.audio_encoder_dict.get(audio_encoder_name, "aac")
         
+        preset_name = self.ffmpeg_preset.get()
+
         config = {
             "incoming_app": self.incoming_app.get(),
             "incoming_port": self.incoming_port.get(),
@@ -240,6 +264,7 @@ class StreamManagerApp:
             "ffmpeg_resolution": resolution_value,  # Save resolution value
             "ffmpeg_bitrate": self.ffmpeg_bitrate.get(),
             "ffmpeg_framerate": self.ffmpeg_framerate.get(),
+            "ffmpeg_preset": preset_name,
             "audio_encoder": audio_encoder_name,
             "audio_bitrate": self.audio_bitrate.get()
         }
@@ -257,6 +282,7 @@ class StreamManagerApp:
         self.ffmpeg_resolution.config(state='disabled')
         self.ffmpeg_bitrate.config(state='disabled')
         self.ffmpeg_framerate.config(state='disabled')
+        self.ffmpeg_preset.config(state='disabled')
         self.audio_encoder.config(state='disabled')
         self.audio_bitrate.config(state='disabled')
 
