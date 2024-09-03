@@ -48,9 +48,9 @@ def sanitize_framerate(framerate):
     return "30"
 
 def start_services(config):
-    youtube_primary_ingress_url = sanitize_url(config.get("youtube_primary_ingress_url", ""))
-    youtube_backup_ingress_url = sanitize_url(config.get("youtube_backup_ingress_url", ""))
-    twitch_ingress_url = sanitize_url(config.get("twitch_ingress_url", ""))
+    youtube_primary_ingest_url = sanitize_url(config.get("youtube_primary_ingest_url", ""))
+    youtube_backup_ingest_url = sanitize_url(config.get("youtube_backup_ingest_url", ""))
+    twitch_ingest_url = sanitize_url(config.get("twitch_ingest_url", ""))
     youtube_stream_key = sanitize_stream_key(config.get("youtube_stream_key", ""))
     twitch_key = sanitize_stream_key(config.get("twitch_key", ""))
     incoming_port = sanitize_numeric(config.get("incoming_port", 1935), default=1935)
@@ -80,10 +80,10 @@ def start_services(config):
     dynamic_config = template.format(
         incoming_port=incoming_port,
         incoming_app=incoming_app,
-        youtube_primary_ingress_url=youtube_primary_ingress_url,
-        youtube_backup_ingress_url=youtube_backup_ingress_url,
+        youtube_primary_ingest_url=youtube_primary_ingest_url,
+        youtube_backup_ingest_url=youtube_backup_ingest_url,
         youtube_stream_key=youtube_stream_key,
-        twitch_ingress_url=twitch_ingress_url,
+        twitch_ingest_url=twitch_ingest_url,
         twitch_key=twitch_key
     )
 

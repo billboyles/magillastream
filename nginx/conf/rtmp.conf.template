@@ -1,5 +1,5 @@
-rtmp_auto_push on;
 rtmp {{
+    rtmp_auto_push on;
     server {{
         listen {incoming_port};  
         chunk_size 4096;
@@ -31,14 +31,14 @@ rtmp {{
         application youtube {{
             live on;
             record off;
-            push {youtube_primary_ingress_url}/{youtube_stream_key};
-            push {youtube_backup_ingress_url}/{youtube_stream_key}?backup=1;
+            push {youtube_primary_ingest_url}/{youtube_stream_key};
+            push {youtube_backup_ingest_url}/{youtube_stream_key}?backup=1;
         }}
 
         application twitch {{
             live on;
             record off;
-            push {twitch_ingress_url}/{twitch_key};
+            push {twitch_ingest_url}/{twitch_key};
         }}
     }}
 }}

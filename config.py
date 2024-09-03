@@ -18,9 +18,9 @@ config_pickle_file = config_save_path / "config.pkl"
 default_config = {
     "youtube_stream_key": "YOUR_YOUTUBE_STREAM_KEY",
     "twitch_key": "YOUR_TWITCH_STREAM_KEY",
-    "youtube_primary_ingress_url": "YOUTUBE_PRIMARY_INGRESS_URL",
-    "youtube_backup_ingress_url": "YOUTUBE_BACKUP_INGRESS_URL",
-    "twitch_ingress_url": "TWITCH_INGRESS_URL",
+    "youtube_primary_ingest_url": "YOUTUBE_PRIMARY_INGEST_URL",
+    "youtube_backup_ingest_url": "YOUTUBE_BACKUP_INGEST_URL",
+    "twitch_ingest_url": "TWITCH_INGEST_URL",
     "incoming_port": "1935",
     "incoming_app": "live",
     "ffmpeg_encoder": ("libx264", "H.264 (libx264)", "flv"),  # Encoder object

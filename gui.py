@@ -37,16 +37,18 @@ class StreamManagerApp:
         self.youtube_ingest_backup.grid(row=4, column=1, padx=10, pady=5)
 
         tk.Label(root, text="YouTube Stream Key:", anchor=tk.E).grid(row=5, column=0, sticky=tk.E, padx=10, pady=5)
-        self.youtube_stream_key = tk.Entry(root, width=entry_width)
+        self.youtube_stream_key = tk.Entry(root, width=entry_width, show="*")
         self.youtube_stream_key.grid(row=5, column=1, padx=10, pady=5)
+        tk.Button(root, text="Show", command=lambda: self.toggle_mask(self.youtube_stream_key)).grid(row=5, column=2, padx=10, pady=5)
 
         tk.Label(root, text="Twitch Ingest URL:", anchor=tk.E).grid(row=6, column=0, sticky=tk.E, padx=10, pady=5)
         self.twitch_ingest_url = tk.Entry(root, width=entry_width)
         self.twitch_ingest_url.grid(row=6, column=1, padx=10, pady=5)
 
         tk.Label(root, text="Twitch Stream Key:", anchor=tk.E).grid(row=7, column=0, sticky=tk.E, padx=10, pady=5)
-        self.twitch_stream_key = tk.Entry(root, width=entry_width)
+        self.twitch_stream_key = tk.Entry(root, width=entry_width, show="*")
         self.twitch_stream_key.grid(row=7, column=1, padx=10, pady=5)
+        tk.Button(root, text="Show", command=lambda: self.toggle_mask(self.twitch_stream_key)).grid(row=7, column=2, padx=10, pady=5)
 
         # FFmpeg Video Fields
         tk.Label(root, text="Video Encoder:", anchor=tk.E).grid(row=1, column=2, sticky=tk.E, padx=10, pady=5)
@@ -136,18 +138,26 @@ class StreamManagerApp:
         else:
             return key
 
-    def set_entry_value(self, entry_widget, value):
+    def toggle_mask(self, entry_widget):
+        if entry_widget.cget("show") == "*":
+            entry_widget.config(show="")
+        else:
+            entry_widget.config(show="*")
+
+    def set_entry_value(self, entry_widget, value, mask=False):
         entry_widget.delete(0, tk.END)
+        if mask:
+            value = self.mask_key(value)
         entry_widget.insert(0, value)
 
     def load_config(self, config):
-        self.incoming_app.insert(0, config.get("incoming_app", ""))
-        self.incoming_port.insert(0, config.get("incoming_port", ""))
-        self.youtube_ingest_main.insert(0, config.get("youtube_primary_ingest_url", ""))
-        self.youtube_ingest_backup.insert(0, config.get("youtube_backup_ingest_url", ""))
-        self.youtube_stream_key.insert(0, config.get("youtube_stream_key", ""))
-        self.twitch_ingest_url.insert(0, config.get("twitch_ingest_url", ""))
-        self.twitch_stream_key.insert(0, config.get("twitch_key", ""))
+        self.set_entry_value(self.incoming_app, config.get("incoming_app", ""))
+        self.set_entry_value(self.incoming_port, config.get("incoming_port", ""))
+        self.set_entry_value(self.youtube_ingest_main, config.get("youtube_primary_ingest_url", ""))
+        self.set_entry_value(self.youtube_ingest_backup, config.get("youtube_backup_ingest_url", ""))
+        self.set_entry_value(self.youtube_stream_key, config.get("youtube_stream_key", ""), mask=True)
+        self.set_entry_value(self.twitch_ingest_url, config.get("twitch_ingest_url", ""))
+        self.set_entry_value(self.twitch_stream_key, config.get("twitch_key", ""), mask=True)
 
         # Fetch and debug encoder data
         encoder_data = config.get("ffmpeg_encoder", ('libx264', 'H.264 (libx264)', 'flv'))
@@ -169,7 +179,7 @@ class StreamManagerApp:
         self.set_entry_value(self.audio_bitrate, config.get("audio_bitrate", "192k"))
 
     def validate_config(self, config):
-        required_fields = ["incoming_app", "incoming_port", "youtube_primary_ingress_url", "youtube_stream_key", "twitch_ingress_url", "twitch_key"]
+        required_fields = ["incoming_app", "incoming_port", "youtube_primary_ingest_url", "youtube_stream_key", "twitch_ingest_url", "twitch_key"]
         for field in required_fields:
             if not config.get(field):
                 messagebox.showwarning("Configuration Error", f"Please fill in the '{field.replace('_', ' ').capitalize()}' field.")
