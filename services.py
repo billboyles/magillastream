@@ -61,6 +61,7 @@ def start_services(config):
     ffmpeg_resolution = sanitize_resolution(config.get("ffmpeg_resolution", "720p"))  # Default to 720p
     ffmpeg_bitrate = sanitize_bitrate(config.get("ffmpeg_bitrate", "6000k"))
     ffmpeg_framerate = sanitize_framerate(config.get("ffmpeg_framerate", "30"))
+    ffmpeg_preset = config.get("ffmpeg_preset", "medium")  # Get the preset from the configuration
 
     # Audio encoding options
     audio_encoder = config.get("audio_encoder", "aac")
@@ -121,7 +122,7 @@ def start_services(config):
             '-minrate', ffmpeg_bitrate,     # Ensure min bitrate matches target
             '-bufsize', buffer_size,        # Buffer size set to twice the bitrate
             '-c:v', ffmpeg_encoder,         # Video encoder
-            '-preset', 'veryfast',
+            '-preset', ffmpeg_preset,       # Use the preset from the configuration
             '-b:a', audio_bitrate,          # Target audio bitrate
             '-c:a', audio_encoder,          # Audio encoder
             '-f', container,
@@ -168,4 +169,3 @@ def stop_services(ffmpeg_processes):
                 proc.wait()
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             logging.error(f"Failed to terminate process {proc.info['name']} (PID: {proc.info['pid']})")
-
