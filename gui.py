@@ -12,7 +12,7 @@ class StreamManagerApp(QtWidgets.QWidget):
         self.config = config
         self.ffmpeg_processes = None
 
-        self.theme_manager = ThemeManager()
+        self.theme_manager = ThemeManager(self)
         self.dark_mode = config.get("dark_mode", False)
 
         self.init_ui()
@@ -32,6 +32,9 @@ class StreamManagerApp(QtWidgets.QWidget):
         self.setLayout(layout)
 
     def create_widgets(self, layout):
+        # Set column width for input fields
+        input_field_width = 350
+
         # Nginx-related fields
         nginx_labels = {
             "Incoming App:": QtWidgets.QLineEdit(),
@@ -59,16 +62,22 @@ class StreamManagerApp(QtWidgets.QWidget):
         for label_text, widget in nginx_labels.items():
             label = QtWidgets.QLabel(label_text)
             layout.addWidget(label, row, 0)
+            widget.setFixedWidth(input_field_width)  # Set width 25% wider
             layout.addWidget(widget, row, 1)
             row += 1
 
         # Show buttons
         self.youtube_key_show_button = QtWidgets.QPushButton("Show")
         self.twitch_key_show_button = QtWidgets.QPushButton("Show")
+
+        self.youtube_key_show_button.setObjectName("youtubeKeyShowButton")
+        self.twitch_key_show_button.setObjectName("twitchKeyShowButton")
+
         self.youtube_key_show_button.setCheckable(True)
         self.twitch_key_show_button.setCheckable(True)
-        layout.addWidget(self.youtube_key_show_button, 4, 2)  
-        layout.addWidget(self.twitch_key_show_button, 6, 2)  
+
+        layout.addWidget(self.youtube_key_show_button, 4, 2)
+        layout.addWidget(self.twitch_key_show_button, 6, 2)
 
         # Connect the "Show" buttons to the masking toggle function
         self.youtube_key_show_button.toggled.connect(lambda checked: self.toggle_masking(self.youtube_stream_key, checked))
@@ -79,6 +88,8 @@ class StreamManagerApp(QtWidgets.QWidget):
         for label_text, widget in ffmpeg_labels.items():
             label = QtWidgets.QLabel(label_text)
             layout.addWidget(label, row, 3)
+            if isinstance(widget, QtWidgets.QLineEdit):
+                widget.setFixedWidth(input_field_width)  # Set width 25% wider
             layout.addWidget(widget, row, 4)
             row += 1
 
@@ -87,19 +98,23 @@ class StreamManagerApp(QtWidgets.QWidget):
         self.stop_button = QtWidgets.QPushButton("Stop Services")
         self.save_button = QtWidgets.QPushButton("Save Configuration")
 
-        layout.addWidget(self.start_button, row, 0)
-        layout.addWidget(self.stop_button, row, 1)
-        layout.addWidget(self.save_button, row, 2)
+        self.stop_button.setObjectName("stopButton")
+        self.start_button.setObjectName("startButton")
+        self.save_button.setObjectName("saveButton")
 
-        # Connect buttons to their functions
         self.start_button.clicked.connect(self.start_services)
         self.stop_button.clicked.connect(self.stop_services)
         self.save_button.clicked.connect(self.save_config)
 
+        # Adjust column spans to reduce negative space and reverse Stop and Save buttons
+        layout.addWidget(self.start_button, row, 0, 1, 2)  # Span across columns 0 and 1
+        layout.addWidget(self.save_button, row, 2)  # Moved to the position of the Stop button
+        layout.addWidget(self.stop_button, row, 3, 1, 2)  # Span across columns 3 and 4
+
         # Theme toggle
         self.theme_toggle = QtWidgets.QCheckBox("Dark Mode")
         self.theme_toggle.setChecked(self.dark_mode)
-        layout.addWidget(self.theme_toggle, row, 4)
+        layout.addWidget(self.theme_toggle, row, 5)
         self.theme_toggle.toggled.connect(self.toggle_theme)
 
         # Store references for later use
@@ -123,7 +138,7 @@ class StreamManagerApp(QtWidgets.QWidget):
         self.twitch_stream_key.setEchoMode(QtWidgets.QLineEdit.Password)
 
     def apply_theme(self):
-        self.theme_manager.apply_theme(self, self.dark_mode)
+        self.theme_manager.apply_theme(self.dark_mode)
 
     def toggle_theme(self, checked):
         self.dark_mode = checked
