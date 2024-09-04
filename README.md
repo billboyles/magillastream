@@ -106,4 +106,4 @@ This project uses open-source components:
 
 I am grateful to the developers of these tools for their contributions to the open-source community.
 
-This project is licensed under the GNU General Public License (GPL) Version 3. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License (GPL) Version 3. See the [LICENSE](LICENSE.txt) file for details.
