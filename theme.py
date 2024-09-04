@@ -3,67 +3,76 @@ from tkinter import ttk
 
 class ThemeManager:
     def __init__(self):
-        self.light_theme = {
-            "bg": "#f0f0f0",
-            "fg": "#000000",
-            "entry_bg": "#ffffff",
-            "entry_fg": "#000000",
-            "button_bg": "#e0e0e0",
-            "button_fg": "#000000",
-            "active_bg": "#d0d0d0",
-            "active_fg": "#000000"
-        }
-        self.dark_theme = {
-            "bg": "#333333",
-            "fg": "#ffffff",
-            "entry_bg": "#555555",
-            "entry_fg": "#ffffff",
-            "button_bg": "#444444",
-            "button_fg": "#ffffff",
-            "active_bg": "#555555",
-            "active_fg": "#ffffff"
-        }
-        self.current_theme = self.light_theme
-        self.style = ttk.Style()
+        self.current_theme = {}
 
     def apply_theme(self, root, dark_mode):
-        self.current_theme = self.dark_theme if dark_mode else self.light_theme
-        root.configure(bg=self.current_theme["bg"])
+        if dark_mode:
+            theme_colors = {
+                "entry_bg": "#333",
+                "entry_fg": "#FFF",
+                "button_bg": "#444",
+                "button_fg": "#FFF",
+                "fg": "#FFF",
+                "bg": "#222",
+                "active_bg": "#555",
+                "active_fg": "#EEE"  # Added active_fg key
+            }
+        else:
+            theme_colors = {
+                "entry_bg": "#FFF",
+                "entry_fg": "#000",
+                "button_bg": "#DDD",
+                "button_fg": "#000",
+                "fg": "#000",
+                "bg": "#EEE",
+                "active_bg": "#CCC",
+                "active_fg": "#000"  # Added active_fg key
+            }
+
+        self.current_theme = theme_colors
         self.update_widget_styles(root)
 
     def update_widget_styles(self, root):
         for widget in root.winfo_children():
             self.style_widget(widget)
-            if isinstance(widget, (tk.Frame, tk.LabelFrame)):
+            if isinstance(widget, ttk.Widget):
+                self.style_ttk_widget(widget)
+            if widget.winfo_children():
                 self.update_widget_styles(widget)
 
     def style_widget(self, widget):
-        if isinstance(widget, tk.Entry):
-            widget.configure(
-                bg=self.current_theme["entry_bg"], 
-                fg=self.current_theme["entry_fg"], 
-                insertbackground=self.current_theme["fg"]
-            )
-        elif isinstance(widget, tk.Label):
-            widget.configure(bg=self.current_theme["bg"], fg=self.current_theme["fg"])
-        elif isinstance(widget, tk.Button):
-            widget.configure(
-                bg=self.current_theme["button_bg"], 
-                fg=self.current_theme["button_fg"], 
-                activebackground=self.current_theme["active_bg"], 
-                activeforeground=self.current_theme["active_fg"]
-            )
-        elif isinstance(widget, ttk.Combobox):
-            self.style.theme_use('default')
-            self.style.configure('TCombobox', 
-                fieldbackground=self.current_theme["entry_bg"],
-                background=self.current_theme["entry_bg"], 
-                foreground=self.current_theme["entry_fg"],
-                arrowcolor=self.current_theme["entry_fg"]
-            )
-            widget.configure(style='TCombobox')
-        else:
-            try:
-                widget.configure(bg=self.current_theme["bg"], fg=self.current_theme["fg"])
-            except tk.TclError:
-                pass  # Skip widgets that do not support bg/fg configuration
+        widget_type = str(type(widget))
+        print(f"Styling widget of type: {widget_type}")
+        print(f"Theme values: {self.current_theme}")
+        try:
+            if isinstance(widget, (tk.Entry, tk.Text)):
+                widget.configure(
+                    background=self.current_theme.get("entry_bg", "#FFF"),
+                    foreground=self.current_theme.get("entry_fg", "#000")
+                )
+            elif isinstance(widget, (tk.Label, tk.Button)):
+                widget.configure(
+                    background=self.current_theme.get("bg", "#EEE"),
+                    foreground=self.current_theme.get("fg", "#000")
+                )
+            else:
+                widget.configure(
+                    bg=self.current_theme.get("bg", "#EEE"),
+                    fg=self.current_theme.get("fg", "#000")
+                )
+        except Exception as e:
+            print(f"Error styling widget: {e}")
+
+    def style_ttk_widget(self, widget):
+        style = ttk.Style()
+        widget_class = widget.winfo_class()
+        if widget_class == "TButton":
+            style.configure("TButton",
+                background=self.current_theme.get("button_bg", "#DDD"),
+                foreground=self.current_theme.get("button_fg", "#000"),
+                relief="flat")  # Ensure the background color is applied
+        elif widget_class == "TCombobox":
+            style.configure("TCombobox",
+                background=self.current_theme.get("entry_bg", "#FFF"),
+                foreground=self.current_theme.get("entry_fg", "#000"))
+        # Add more styles as needed
