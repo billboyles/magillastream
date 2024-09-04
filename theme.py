@@ -1,5 +1,4 @@
-import tkinter as tk
-from tkinter import ttk
+from PySide6 import QtCore, QtWidgets, QtGui
 
 class ThemeManager:
     def __init__(self):
@@ -15,7 +14,7 @@ class ThemeManager:
                 "fg": "#FFF",
                 "bg": "#222",
                 "active_bg": "#555",
-                "active_fg": "#EEE"  # Added active_fg key
+                "active_fg": "#EEE"
             }
         else:
             theme_colors = {
@@ -26,53 +25,42 @@ class ThemeManager:
                 "fg": "#000",
                 "bg": "#EEE",
                 "active_bg": "#CCC",
-                "active_fg": "#000"  # Added active_fg key
+                "active_fg": "#000"
             }
 
         self.current_theme = theme_colors
         self.update_widget_styles(root)
 
     def update_widget_styles(self, root):
-        for widget in root.winfo_children():
-            self.style_widget(widget)
-            if isinstance(widget, ttk.Widget):
-                self.style_ttk_widget(widget)
-            if widget.winfo_children():
-                self.update_widget_styles(widget)
+        # Apply theme to root window
+        root.setStyleSheet(self.get_stylesheet())
+        
+        # Recursive styling if necessary
+        for child in root.findChildren(QtWidgets.QWidget):
+            child.setStyleSheet(self.get_stylesheet())
 
-    def style_widget(self, widget):
-        widget_type = str(type(widget))
-        print(f"Styling widget of type: {widget_type}")
-        print(f"Theme values: {self.current_theme}")
-        try:
-            if isinstance(widget, (tk.Entry, tk.Text)):
-                widget.configure(
-                    background=self.current_theme.get("entry_bg", "#FFF"),
-                    foreground=self.current_theme.get("entry_fg", "#000")
-                )
-            elif isinstance(widget, (tk.Label, tk.Button)):
-                widget.configure(
-                    background=self.current_theme.get("bg", "#EEE"),
-                    foreground=self.current_theme.get("fg", "#000")
-                )
-            else:
-                widget.configure(
-                    bg=self.current_theme.get("bg", "#EEE"),
-                    fg=self.current_theme.get("fg", "#000")
-                )
-        except Exception as e:
-            print(f"Error styling widget: {e}")
+    def get_stylesheet(self):
+        # Create stylesheet string
+        return f"""
+            QWidget {{
+                background-color: {self.current_theme['bg']};
+                color: {self.current_theme['fg']};
+            }}
+            QLineEdit {{
+                background-color: {self.current_theme['entry_bg']};
+                color: {self.current_theme['entry_fg']};
+            }}
+            QPushButton {{
+                background-color: {self.current_theme['button_bg']};
+                color: {self.current_theme['button_fg']};
+            }}
+            QPushButton:pressed {{
+                background-color: {self.current_theme['active_bg']};
+                color: {self.current_theme['active_fg']};
+            }}
+            QComboBox {{
+                background-color: {self.current_theme['entry_bg']};
+                color: {self.current_theme['entry_fg']};
+            }}
+        """
 
-    def style_ttk_widget(self, widget):
-        style = ttk.Style()
-        widget_class = widget.winfo_class()
-        if widget_class == "TButton":
-            style.configure("TButton",
-                background=self.current_theme.get("button_bg", "#DDD"),
-                foreground=self.current_theme.get("button_fg", "#000"),
-                relief="flat")  # Ensure the background color is applied
-        elif widget_class == "TCombobox":
-            style.configure("TCombobox",
-                background=self.current_theme.get("entry_bg", "#FFF"),
-                foreground=self.current_theme.get("entry_fg", "#000"))
-        # Add more styles as needed
