@@ -22,11 +22,13 @@ You can use MagillaStream several ways - by using the prebuilt EXE file, by buil
 
    *If you are uncomfortable with allowing an untrusted app to run, consider building the app from source or running it using Python as detailed below. You can also supply your own binaries for Nginx and FFmpeg - just be sure to use compatible versions. Nginx needs to have the RTMP module enabled, and FFMPEG needs to have the correct options for your specific hardware. Both binaries need to be compiled for Windows.*
 
+No additional installations or dependencies are needed when running the app from the supplied EXE.
+
 ## Using the Source Files
 
 ### Prerequisites
 
-Ensure you have Python installed. You can download Python from [python.org](https://www.python.org/downloads/). No additional installations or dependencies are needed when running the app from the supplied EXE.
+Ensure you have Python installed. You can download Python from [python.org](https://www.python.org/downloads/). 
 
 ### Cloning the Repository
 
