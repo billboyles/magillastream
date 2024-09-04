@@ -6,24 +6,17 @@ MagillaStream is a lightweight and portable RTMP server application that enables
 
 ## Getting Started
 
-### Prerequisites
+You can use MagillaStream several ways - by using the prebuilt EXE file, by building your own EXE from the source code, or by running the source code using PYthon. 
 
-Ensure you have Python installed. You can download Python from [python.org](https://www.python.org/downloads/).
+### Using the EXE
 
-### Cloning the Repository
+1. Download the ZIP file [MagillaStream.zip](https://github.com/billboyles/magillastream/blob/main/MagillaStream.zip) containing the app EXE and other necessary components.
 
-You can clone the repository using Git:
+2. Unzip the file in a desired location, such as your home folder. 
 
-`git clone https://github.com/billboyles/magillastream.git`
+3. Run the EXE (you may want to add a shortcut to your desktop)
 
-Alternatively, you can download the ZIP file of the repository from GitHub and extract it to your desired location.
-# MagillaStream
-
-## Overview
-
-MagillaStream is a lightweight and portable RTMP server application that enables streamers to broadcast to YouTube and Twitch with customizable settings. It features a GUI for configuration and manages re-encoding as needed.
-
-## Getting Started
+### Using the Source Files
 
 ### Prerequisites
 
@@ -34,10 +27,6 @@ Ensure you have Python installed. You can download Python from [python.org](http
 You can clone the repository using Git:
 
 `git clone https://github.com/billboyles/magillastream.git`
-
-Alternatively, you can download the ZIP file of the repository from GitHub and extract it to your desired location.
-
-### Running the Application
 
 Navigate to the project directory:
 
@@ -45,6 +34,16 @@ Navigate to the project directory:
 
 Install the requirements:
 `pip install -r requirements.txt`
+
+### Building your own EXE
+
+Using Pyinstaller to build the EXE with the following command:
+
+`pyinstaller --onefile --add-data "ffmpeg;ffmpeg" --add-data "nginx;nginx" main.py    `
+
+The resulting `dist` folder will contain the EXE. Copy the `nginx` and `ffmpeg` folders in the `dist` folder. This can then be renamed and moved as desired. 
+
+### Running the Application Using Python
 
 Run the main script:
 
@@ -76,11 +75,10 @@ In the GUI, you can configure the following FFmpeg settings:
 - **Framerate (fps):** Set the framerate for the stream (e.g., `30`).
 
 ## Nota Bene
-THIS IS A WORK IN PROGRESS!
+
+**THIS IS A WORK IN PROGRESS!**
 
 I do not guarantee there are no bugs, but I have tested this end to end (including deleting it and following my own setup instructions) and it seems to work. If you use this and encounter a bug (there will be bugs), PLEASE PLEASE PLEASE let me know. If you use it and it's great, optionally also tell me, that would be cool to hear.
-
-I am currently having a little trouble with the re-encoded stream not quite keeping up (it's like 99.5%) but I don't think the issue is my GPU because it is barely even working. I think that may have to do with my actual OBS settings. I'm not a streamer and I'm probably messing something up. If you know FFMPEG or a good understanding of streaming settings and are willing to help me optimize this, that would be huge. I want to make this a project for the community to benefit from and allow folks to stop paying outlandish prices for restream services. 
 
 ## License
 
