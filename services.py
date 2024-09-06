@@ -91,6 +91,12 @@ def start_services(config):
     except Exception as e:
         logging.error(f"Failed to read template file: {e}")
         return
+    try:
+        with open(template_path, 'r') as template_file:
+            template = template_file.read()
+    except Exception as e:
+        logging.error(f"Failed to read template file: {e}")
+        return
 
     # Fill in the dynamic RTMP configuration
     dynamic_config = template.format(
