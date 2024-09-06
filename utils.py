@@ -4,44 +4,48 @@ from paths import ffmpeg_path
 
 # Define a mapping of encoder shortcodes to user-friendly names and best containers
 ENCODER_INFO = {
-    'libx264': ('H.264 (libx264)', 'flv'),
-    'h264_qsv': ('H.264 (Intel Quick Sync)', 'flv'),
-    'libx265': ('HEVC (libx265)', 'mp4'),
-    'hevc_qsv': ('HEVC (Intel Quick Sync)', 'mp4'),
-    'libaom-av1': ('AV1 (libaom-av1)', 'mp4'),
-    'h264_nvenc': ('H.264 (NVIDIA NVENC)', 'flv'),
-    'hevc_nvenc': ('HEVC (NVIDIA NVENC)', 'mp4'),
-    'h264_amf': ('H.264 (AMD AMF)', 'flv'),
-    'hevc_amf': ('HEVC (AMD AMF)', 'mp4'),
+    'libx264': ('H.264 (libx264)', 'flv', ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']),
+    'h264_qsv': ('H.264 (Intel Quick Sync)', 'flv', ['veryfast', 'fast', 'medium', 'slow']),
+    'libx265': ('HEVC (libx265)', 'mp4', ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']),
+    'hevc_qsv': ('HEVC (Intel Quick Sync)', 'mp4', ['veryfast', 'fast', 'medium', 'slow']),
+    'libaom-av1': ('AV1 (libaom-av1)', 'mp4', ['realtime', 'good', 'best']),
+    'h264_nvenc': ('H.264 (NVIDIA NVENC)', 'flv', ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']),
+    'hevc_nvenc': ('HEVC (NVIDIA NVENC)', 'mp4', ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']),
+    'h264_amf': ('H.264 (AMD AMF)', 'flv', ['balanced', 'quality', 'speed']),
+    'hevc_amf': ('HEVC (AMD AMF)', 'mp4', ['balanced', 'quality', 'speed']),
 }
 
 def list_ffmpeg_encoders():
     try:
-        # Build the FFmpeg executable path
         ffmpeg_executable = os.path.join(ffmpeg_path, 'ffmpeg.exe')
         
-        # Check if the FFmpeg executable exists
         if not os.path.isfile(ffmpeg_executable):
             raise FileNotFoundError(f"FFmpeg executable not found at {ffmpeg_executable}")
         
-        # Run FFmpeg command to list encoders
         result = subprocess.run([ffmpeg_executable, '-encoders'], capture_output=True, text=True, check=True)
         
-        # Define the encoders of interest
         encoders_of_interest = list(ENCODER_INFO.keys())
-        
-        # Filter the result
         filtered_lines = [line for line in result.stdout.splitlines() if any(encoder in line for encoder in encoders_of_interest)]
         
-        # Create a list of encoder shortcodes, their user-friendly names, and best containers
         encoders_list = []
         for line in filtered_lines:
             for encoder in encoders_of_interest:
                 if encoder in line:
-                    user_friendly_name, container = ENCODER_INFO.get(encoder, (encoder, 'unknown'))
-                    encoders_list.append((encoder, user_friendly_name, container))
+                    user_friendly_name, container, presets = ENCODER_INFO.get(encoder, (encoder, 'unknown', []))
+                    encoders_list.append((encoder, user_friendly_name, container, presets))
         
-        return encoders_list
+        # Filter out encoders that aren't supported by the current hardware
+        available_encoders = []
+        result_hwaccels = subprocess.run([ffmpeg_executable, '-hwaccels'], capture_output=True, text=True, check=True)
+        hwaccels = result_hwaccels.stdout.lower()
+        for encoder, name, container, presets in encoders_list:
+            if ('qsv' in encoder and 'qsv' in hwaccels) or \
+               ('nvenc' in encoder and 'cuda' in hwaccels) or \
+               ('amf' in encoder and 'amf' in hwaccels) or \
+               (encoder.startswith('lib') and 'qsv' not in encoder and 'nvenc' not in encoder and 'amf' not in encoder):
+                available_encoders.append((encoder, name, container, presets))
+        
+        return available_encoders
 
     except FileNotFoundError as e:
         print(f"FileNotFoundError occurred: {e}")
