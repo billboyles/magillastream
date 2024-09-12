@@ -29,15 +29,17 @@ namespace Backend.Utilities
 
             try
             {
+                Logger.LogDebug($"Checking if FFmpeg exists at {_ffmpegPath}");
                 if (!File.Exists(_ffmpegPath))
                 {
                     throw new FileNotFoundException($"FFmpeg executable not found at {_ffmpegPath}");
                 }
 
+                Logger.LogInfo("Running FFmpeg to get supported hardware accelerations");
                 var hwaccels = string.Join(Environment.NewLine, RunProcess(_ffmpegPath, "-hwaccels")).ToLower();
 
                 // Filter the encoder list based on hardware support
-                foreach (var (encoder, (name, container, presets)) in EncoderInfo) 
+                foreach (var (encoder, (name, container, presets)) in EncoderInfo)
                 {
                     if ((encoder.Contains("qsv") && hwaccels.Contains("qsv")) ||
                         (encoder.Contains("nvenc") && hwaccels.Contains("cuda")) ||
@@ -45,6 +47,7 @@ namespace Backend.Utilities
                         encoder.StartsWith("lib"))
                     {
                         supportedCodecs.Add(name); // Add user-friendly encoder name to the list
+                        Logger.LogDebug($"Supported encoder found: {name}");
                     }
                 }
             }
@@ -57,12 +60,13 @@ namespace Backend.Utilities
                 Logger.LogError($"Error occurred while running FFmpeg: {e.Message}");
             }
 
-            Logger.Log("Supported encoders: " + string.Join(", ", supportedCodecs));
+            Logger.LogInfo("Supported encoders: " + string.Join(", ", supportedCodecs));
             return supportedCodecs;
         }
 
         private static List<string> RunProcess(string executable, string arguments)
         {
+            Logger.LogDebug($"Running process: {executable} {arguments}");
             var processStartInfo = new ProcessStartInfo
             {
                 FileName = executable,
@@ -83,17 +87,20 @@ namespace Backend.Utilities
             try
             {
                 process.Start();
+                Logger.LogDebug("Process started successfully");
+
                 while (!process.StandardOutput.EndOfStream)
                 {
                     var line = process.StandardOutput.ReadLine();
                     if (line != null)
                     {
                         output.Add(line);
-                        Logger.Log(line); // Log process output
+                        Logger.LogDebug($"Process output: {line}"); 
                     }
                 }
 
                 process.WaitForExit();
+                Logger.LogInfo($"Process exited with code: {process.ExitCode}");
             }
             catch (Exception ex)
             {

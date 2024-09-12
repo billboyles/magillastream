@@ -8,5 +8,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Update="ffmpeg\ffmpeg.exe">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <TargetPath>Backend\ffmpeg\ffmpeg.exe</TargetPath>
+    </None>
+</ItemGroup>
+
 </Project>
 

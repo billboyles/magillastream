@@ -25,7 +25,7 @@ namespace GUI.ViewModels
 
         public ObservableCollection<string> OutputServices { get; set; }
         public ObservableCollection<string> Encoders { get; set; }
-        public ObservableCollection<string> Resolutions { get; set; }  // Added Resolutions collection
+        public ObservableCollection<string> Resolutions { get; set; }
 
         public string SelectedService
         {
@@ -59,17 +59,24 @@ namespace GUI.ViewModels
 
         public ICommand StartStreamCommand { get; set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
+        // Constructor
         public MainViewModel()
         {
+            // Initialize fields
+            _obsStreamUrl = string.Empty;
+            _selectedService = string.Empty;
+            _selectedEncoder = string.Empty;
+            _selectedResolution = string.Empty;
+
             _ffmpegService = new FFmpegService();
 
             OutputServices = new ObservableCollection<string> { "YouTube", "Twitch" };
             Encoders = new ObservableCollection<string>(_ffmpegService.GetAvailableEncoders());
 
             // Populate the Resolutions collection with standard video resolutions
-            Resolutions = new ObservableCollection<string> 
+            Resolutions = new ObservableCollection<string>
             {
                 "360p",
                 "480p",
@@ -86,7 +93,6 @@ namespace GUI.ViewModels
         {
             var outputServices = new List<Tuple<string, string, bool, string, string, string>>
             {
-                
                 new Tuple<string, string, bool, string, string, string>(
                     SelectedService,    // Service URL or identifier
                     "YourStreamKey",    // Replace with actual stream key
@@ -99,7 +105,6 @@ namespace GUI.ViewModels
 
             _ffmpegService.StartStream(ObsStreamUrl, outputServices, enablePTSGeneration: true);
         }
-
 
         protected virtual void OnPropertyChanged(string propertyName)
         {

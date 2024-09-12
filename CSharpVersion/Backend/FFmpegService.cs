@@ -1,40 +1,10 @@
 using System.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Backend.Utilities;
 
 namespace Backend
 {
-    public static class Logger
-    {
-        private static readonly string LogFilePath = Path.Combine(AppContext.BaseDirectory, "Logs", "FFmpegService.log");
-
-        static Logger()
-        {
-            // Ensure the Logs directory exists
-            Directory.CreateDirectory(Path.GetDirectoryName(LogFilePath)!);
-        }
-
-        public static void Log(string message)
-        {
-            Console.WriteLine(message);
-            try
-            {
-                File.AppendAllText(LogFilePath, $"{DateTime.Now}: {message}{Environment.NewLine}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Logging failed: {ex.Message}");
-            }
-        }
-
-        public static void LogError(string message)
-        {
-            Log($"ERROR: {message}");
-        }
-    }
-
     public class FFmpegService
     {
         private Process? _ffmpegProcess;
@@ -51,32 +21,44 @@ namespace Backend
         public static string SanitizeUrl(string url)
         {
             url = url.Trim();
+            Logger.LogDebug($"Sanitizing URL: {url}");
             if (url.EndsWith("/"))
                 url = url.Substring(0, url.Length - 1);
             if (url.Contains("?"))
                 url = url.Split('?')[0];
             if (url.StartsWith("http://") || url.StartsWith("https://") || url.StartsWith("rtmp://"))
                 return url;
+            Logger.LogWarning("Invalid URL format");
             return string.Empty;
         }
 
         public static string SanitizeStreamKey(string key)
         {
+            Logger.LogDebug($"Sanitizing Stream Key: {key}");
             return key.Trim();
         }
 
         public static string SanitizeBitrate(string bitrate, string defaultBitrate = "6000k")
         {
+            Logger.LogDebug($"Sanitizing Bitrate: {bitrate}");
             bitrate = bitrate.Trim().ToLower();
             if (bitrate.EndsWith("k") && int.TryParse(bitrate.TrimEnd('k'), out _))
+            {
+                Logger.LogDebug($"Valid bitrate with 'k': {bitrate}");
                 return bitrate;
+            }
             else if (int.TryParse(bitrate, out _))
+            {
+                Logger.LogDebug($"Plain numeric bitrate: {bitrate}");
                 return bitrate + "k";
+            }
+            Logger.LogWarning($"Invalid bitrate format. Defaulting to: {defaultBitrate}");
             return defaultBitrate;
         }
 
         public static string SanitizeResolution(string resolution)
         {
+            Logger.LogDebug($"Sanitizing Resolution: {resolution}");
             var resolutionMap = new Dictionary<string, string>()
             {
                 { "360p", "640x360" },
@@ -87,19 +69,22 @@ namespace Backend
                 { "4K", "3840x2160" }
             };
 
-            return resolutionMap.TryGetValue(resolution, out string? sanitizedResolution) ? sanitizedResolution : "1920x1080";
+            return resolutionMap.TryGetValue(resolution, out string? sanitizedResolution)
+                ? sanitizedResolution
+                : "1920x1080";
         }
 
         public List<string> GetAvailableEncoders()
         {
-            return _ffmpegUtils.GetSupportedCodecs();  
+            Logger.LogDebug("Fetching available encoders.");
+            return _ffmpegUtils.GetSupportedCodecs();
         }
 
         public void StartStream(string obsStreamUrl, List<Tuple<string, string, bool, string, string, string>> outputServices, bool enablePTSGeneration)
         {
             if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
             {
-                Logger.Log("Stopping existing FFmpeg process.");
+                Logger.LogWarning("An existing FFmpeg process is running. Stopping it.");
                 _ffmpegProcess.Kill();
                 _ffmpegProcess.Dispose();
                 _ffmpegProcess = null;
@@ -178,13 +163,13 @@ namespace Backend
 
                 _ffmpegProcess.StartInfo.Arguments = arguments.Trim();
 
-                Logger.Log("Starting FFmpeg process with arguments: " + arguments);
+                Logger.LogInfo($"Starting FFmpeg process with arguments: {arguments}");
 
                 _ffmpegProcess.OutputDataReceived += (sender, args) =>
                 {
                     if (args.Data != null)
                     {
-                        Logger.Log(args.Data);
+                        Logger.LogDebug(args.Data);
                     }
                 };
 
@@ -206,7 +191,7 @@ namespace Backend
         {
             if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
             {
-                Logger.Log("Stopping FFmpeg process.");
+                Logger.LogInfo("Stopping FFmpeg process.");
                 _ffmpegProcess.Kill();
                 _ffmpegProcess.Dispose();
                 _ffmpegProcess = null;
