@@ -1,4 +1,9 @@
-namespace CSharpVersion.Utilities
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+
+namespace Backend.Utilities
 {
     public class FFmpegUtils
     {
@@ -32,7 +37,7 @@ namespace CSharpVersion.Utilities
                 var hwaccels = string.Join(Environment.NewLine, RunProcess(_ffmpegPath, "-hwaccels")).ToLower();
 
                 // Filter the encoder list based on hardware support
-                foreach (var (encoder, name, container, presets) in EncoderInfo)
+                foreach (var (encoder, (name, container, presets)) in EncoderInfo) 
                 {
                     if ((encoder.Contains("qsv") && hwaccels.Contains("qsv")) ||
                         (encoder.Contains("nvenc") && hwaccels.Contains("cuda")) ||

@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType> 
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>csharp_version</RootNamespace>
+    <RootNamespace>CSharpVersion</RootNamespace> 
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>
+

@@ -1,7 +1,10 @@
 using System.Diagnostics;
-using CSharpVersion.Utilities;  
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Backend.Utilities;
 
-namespace CSharpVersion
+namespace Backend
 {
     public static class Logger
     {
@@ -10,7 +13,6 @@ namespace CSharpVersion
         public static void Log(string message)
         {
             Console.WriteLine(message);
-
             try
             {
                 File.AppendAllText(LogFilePath, $"{DateTime.Now}: {message}{Environment.NewLine}");
@@ -61,17 +63,12 @@ namespace CSharpVersion
         {
             bitrate = bitrate.Trim().ToLower();
             if (bitrate.EndsWith("k") && int.TryParse(bitrate.TrimEnd('k'), out _))
-            {
                 return bitrate;
-            }
-            else if (int.TryParse(bitrate, out _))  
-            {
-                return bitrate + "k";  // Append 'k' for consistency
-            }
-            return defaultBitrate;  // Return default bitrate if input is invalid
+            else if (int.TryParse(bitrate, out _))
+                return bitrate + "k";
+            return defaultBitrate;
         }
 
-        // Maps resolution values
         public static string SanitizeResolution(string resolution)
         {
             var resolutionMap = new Dictionary<string, string>()
@@ -84,9 +81,13 @@ namespace CSharpVersion
                 { "4K", "3840x2160" }
             };
 
-            return resolutionMap.TryGetValue(resolution, out string? sanitizedResolution) 
-                ? sanitizedResolution 
-                : "1920x1080";  // Default to 1080p
+            return resolutionMap.TryGetValue(resolution, out string? sanitizedResolution) ? sanitizedResolution : "1920x1080";
+        }
+
+        public List<string> GetAvailableEncoders()
+        {
+
+            return _ffmpegUtils.GetSupportedCodecs();  
         }
 
         public void StartStream(string obsStreamUrl, List<Tuple<string, string, bool, string, string, string>> outputServices, bool enablePTSGeneration)
@@ -111,7 +112,7 @@ namespace CSharpVersion
                 bool reEncode = service.Item3;
                 string bitrate = SanitizeBitrate(service.Item4);
                 string resolution = SanitizeResolution(service.Item5);
-                string selectedEncoder = service.Item6; 
+                string encoder = reEncode ? service.Item6 : "copy"; 
 
                 if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(streamKey))
                 {
@@ -145,7 +146,7 @@ namespace CSharpVersion
                 bool reEncode = bool.Parse(settingsParts[2]);
                 string bufsize = $"{int.Parse(bitrate.TrimEnd('k')) * 3}k";
 
-                string encoder = reEncode ? selectedEncoder : "copy";
+                string encoder = reEncode ? settingsParts[3] : "copy"; 
 
                 if (reEncode)
                 {

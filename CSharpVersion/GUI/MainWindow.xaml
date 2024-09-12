@@ -1,0 +1,39 @@
+﻿<Window x:Class="GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Magilla Stream" Height="400" Width="600">
+    
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="400">
+            <!-- OBS Stream URL -->
+            <TextBlock Text="OBS Stream URL" Margin="0,10"/>
+            <TextBox Text="{Binding ObsStreamUrl}" Height="30" />
+
+            <!-- Output Services -->
+            <TextBlock Text="Output Services" Margin="10,10,0,0"/>
+            <ComboBox ItemsSource="{Binding OutputServices}" SelectedItem="{Binding SelectedService}" Height="30" Width="300" Margin="0,5"/>
+
+            <!-- Stream Key -->
+            <TextBlock Text="Stream Key" Margin="10,10,0,0"/>
+            <TextBox Text="{Binding StreamKey}" Height="30"/>
+
+            <!-- Bitrate -->
+            <TextBlock Text="Bitrate" Margin="10,10,0,0"/>
+            <TextBox Text="{Binding Bitrate}" Height="30"/>
+
+            <!-- Resolution -->
+            <TextBlock Text="Resolution" Margin="10,10,0,0"/>
+            <ComboBox ItemsSource="{Binding Resolutions}" SelectedItem="{Binding Resolution}" Height="30" Width="300"/>
+
+            <!-- Re-Encode Option -->
+            <CheckBox Content="Re-encode" IsChecked="{Binding ReEncode}" Margin="10"/>
+
+            <!-- Encoder Selection -->
+            <TextBlock Text="Encoder" Margin="10,10,0,0"/>
+            <ComboBox ItemsSource="{Binding Encoders}" SelectedItem="{Binding SelectedEncoder}" Height="30" Width="300"/>
+
+            <!-- Start Streaming Button -->
+            <Button Content="Start Streaming" Command="{Binding StartStreamCommand}" Width="200" Height="40" Margin="10"/>
+        </StackPanel>
+    </Grid>
+</Window>
