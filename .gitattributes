@@ -1,3 +1,11 @@
+# Large files should be handled by Git LFS
 *.exe filter=lfs diff=lfs merge=lfs -text
 ffmpeg/*.exe filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text
+
+# Set line ending normalization
+* text=auto
+
+# Treat C# files as text
+*.cs diff=csharp
+*.csproj text

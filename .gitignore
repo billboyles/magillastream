@@ -1,3 +1,5 @@
+# Python-related ignores
+
 # Ignore pickle files
 *.pkl
 
@@ -16,11 +18,8 @@ config.pkl
 # Ignore files in log dir
 nginx/logs/*
 
-# Ignorre generated rtmp config file
+# Ignore generated rtmp config file
 nginx/conf/rtmp.conf
-
-# Ignore files in temp dir
-nginx/temp/*
 
 # Ignore files in temp dir
 nginx/temp/*
@@ -28,11 +27,24 @@ nginx/temp/*
 # Ignore venv config
 pyvenv.cfg
 
-# Ignore venv
-venv
+# Ignore virtual environment directories
+venv/
 
-# Ignore build dir
+# Ignore build directories
 build/
 
-# Ignore spec file
+# Ignore spec files
 *.spec
+
+# C#-related ignores
+
+# Ignore Visual Studio temporary files, build results, and project files
+.vscode/
+bin/
+obj/
+
+# Ignore Visual Studio working directory files
+.vs/
+
+# Ignore NuGet packages folder
+packages/
