@@ -8,7 +8,13 @@ namespace Backend
 {
     public static class Logger
     {
-        private static readonly string LogFilePath = "FFmpegService.log";
+        private static readonly string LogFilePath = Path.Combine(AppContext.BaseDirectory, "Logs", "FFmpegService.log");
+
+        static Logger()
+        {
+            // Ensure the Logs directory exists
+            Directory.CreateDirectory(Path.GetDirectoryName(LogFilePath)!);
+        }
 
         public static void Log(string message)
         {
@@ -86,7 +92,6 @@ namespace Backend
 
         public List<string> GetAvailableEncoders()
         {
-
             return _ffmpegUtils.GetSupportedCodecs();  
         }
 
@@ -100,8 +105,17 @@ namespace Backend
                 _ffmpegProcess = null;
             }
 
-            _ffmpegProcess = new Process();
-            _ffmpegProcess.StartInfo.FileName = _ffmpegPath;
+            _ffmpegProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = _ffmpegPath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
 
             var groupedServices = new Dictionary<string, List<Tuple<string, string>>>();
 
@@ -112,7 +126,7 @@ namespace Backend
                 bool reEncode = service.Item3;
                 string bitrate = SanitizeBitrate(service.Item4);
                 string resolution = SanitizeResolution(service.Item5);
-                string encoder = reEncode ? service.Item6 : "copy"; 
+                string encoder = reEncode ? service.Item6 : "copy";
 
                 if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(streamKey))
                 {
@@ -146,7 +160,7 @@ namespace Backend
                 bool reEncode = bool.Parse(settingsParts[2]);
                 string bufsize = $"{int.Parse(bitrate.TrimEnd('k')) * 3}k";
 
-                string encoder = reEncode ? settingsParts[3] : "copy"; 
+                string encoder = reEncode ? settingsParts[3] : "copy";
 
                 if (reEncode)
                 {
@@ -163,10 +177,6 @@ namespace Backend
                 }
 
                 _ffmpegProcess.StartInfo.Arguments = arguments.Trim();
-                _ffmpegProcess.StartInfo.RedirectStandardOutput = true;
-                _ffmpegProcess.StartInfo.RedirectStandardError = true;
-                _ffmpegProcess.StartInfo.UseShellExecute = false;
-                _ffmpegProcess.StartInfo.CreateNoWindow = true;
 
                 Logger.Log("Starting FFmpeg process with arguments: " + arguments);
 

@@ -7,7 +7,7 @@ namespace Backend.Utilities
 {
     public class FFmpegUtils
     {
-        private readonly string _ffmpegPath = Path.Combine(AppContext.BaseDirectory, "ffmpeg", "ffmpeg.exe");
+        private readonly string _ffmpegPath = Path.Combine(AppContext.BaseDirectory, "Backend", "ffmpeg", "ffmpeg.exe");
 
         // Map encoders to user-friendly names, containers, and presets
         private readonly Dictionary<string, (string, string, List<string>)> EncoderInfo = new()
@@ -50,13 +50,14 @@ namespace Backend.Utilities
             }
             catch (FileNotFoundException e)
             {
-                Console.WriteLine($"FileNotFoundError occurred: {e.Message}");
+                Logger.LogError($"FileNotFoundError occurred: {e.Message}");
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error occurred while running FFmpeg: {e.Message}");
+                Logger.LogError($"Error occurred while running FFmpeg: {e.Message}");
             }
 
+            Logger.Log("Supported encoders: " + string.Join(", ", supportedCodecs));
             return supportedCodecs;
         }
 
@@ -67,6 +68,7 @@ namespace Backend.Utilities
                 FileName = executable,
                 Arguments = arguments,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -76,19 +78,28 @@ namespace Backend.Utilities
                 StartInfo = processStartInfo
             };
 
-            process.Start();
             var output = new List<string>();
 
-            while (!process.StandardOutput.EndOfStream)
+            try
             {
-                var line = process.StandardOutput.ReadLine();
-                if (line != null)
+                process.Start();
+                while (!process.StandardOutput.EndOfStream)
                 {
-                    output.Add(line);
+                    var line = process.StandardOutput.ReadLine();
+                    if (line != null)
+                    {
+                        output.Add(line);
+                        Logger.Log(line); // Log process output
+                    }
                 }
+
+                process.WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error occurred while running process: {ex.Message}");
             }
 
-            process.WaitForExit();
             return output;
         }
     }

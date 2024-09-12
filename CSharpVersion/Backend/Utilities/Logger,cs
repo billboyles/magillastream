@@ -1,0 +1,38 @@
+using System;
+using System.IO;
+
+namespace Backend.Utilities
+{
+    public static class Logger
+    {
+        private static readonly string LogDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+        private static readonly string LogFilePath = Path.Combine(LogDirectory, "FFmpegService.log");
+
+        static Logger()
+        {
+            // Ensure the logs directory exists
+            if (!Directory.Exists(LogDirectory))
+            {
+                Directory.CreateDirectory(LogDirectory);
+            }
+        }
+
+        public static void Log(string message)
+        {
+            Console.WriteLine(message);
+            try
+            {
+                File.AppendAllText(LogFilePath, $"{DateTime.Now}: {message}{Environment.NewLine}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Logging failed: {ex.Message}");
+            }
+        }
+
+        public static void LogError(string message)
+        {
+            Log($"ERROR: {message}");
+        }
+    }
+}
