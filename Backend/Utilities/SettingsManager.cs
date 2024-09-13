@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Backend.Utilities;
+using System.Collections.Generic;
 
 public class SettingsManager
 {
@@ -17,13 +18,34 @@ public class SettingsManager
     public void SaveSettings(AppSettings settings)
     {
         // Serialize the settings
-        var serializedSettings = $"{settings.ObsStreamUrl}|{settings.StreamKey}|{settings.SelectedService}|{settings.Bitrate}|{settings.SelectedResolution}|{settings.SelectedEncoder}";
+        var sb = new StringBuilder();
+
+        // OBS Stream URL
+        sb.Append($"{settings.ObsStreamUrl}|");
+
+        // Original Stream Outputs
+        foreach (var output in settings.OriginalStreamOutputs)
+        {
+            sb.Append($"{output.Url},{output.StreamKey ?? string.Empty};");
+        }
+        sb.Append("|");
+
+        // Encodings
+        foreach (var encoding in settings.Encodings)
+        {
+            sb.Append($"{encoding.Encoder},{encoding.Resolution},{encoding.Bitrate}|");
+            foreach (var output in encoding.OutputServices)
+            {
+                sb.Append($"{output.Url},{output.StreamKey ?? string.Empty};");
+            }
+            sb.Append("|");
+        }
 
         // Generate a unique salt for this encryption
         var salt = GenerateSalt();
 
         // Encrypt the settings using the salt
-        var encryptedData = Encrypt(serializedSettings, _password, salt);
+        var encryptedData = Encrypt(sb.ToString(), _password, salt);
 
         // Combine salt and encrypted data for storage
         var dataToStore = new byte[salt.Length + encryptedData.Length];
@@ -42,11 +64,11 @@ public class SettingsManager
             return new AppSettings
             {
                 ObsStreamUrl = string.Empty,
-                StreamKey = string.Empty,
-                SelectedService = "YouTube",
-                Bitrate = "6000k", // Default bitrate
-                SelectedResolution = "1080p",
-                SelectedEncoder = "libx264"
+                OriginalStreamOutputs = new List<OutputService>
+                {
+                    new OutputService { Url = "rtmp://default-url", StreamKey = string.Empty }
+                },
+                Encodings = new List<EncodingSettings>()
             };
         }
 
@@ -66,23 +88,53 @@ public class SettingsManager
 
         // Deserialize the settings
         var parts = decryptedData.Split('|');
+        var obsStreamUrl = parts[0];
+
+        // Deserialize Original Stream Outputs
+        var originalOutputs = new List<OutputService>();
+        var originalOutputParts = parts[1].Split(';', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var outputPart in originalOutputParts)
+        {
+            var outputParts = outputPart.Split(',');
+            originalOutputs.Add(new OutputService { Url = outputParts[0], StreamKey = outputParts[1] });
+        }
+
+        // Deserialize Encodings
+        var encodings = new List<EncodingSettings>();
+        for (int i = 2; i < parts.Length; i += 2)
+        {
+            var encodingParts = parts[i].Split(',');
+            var outputParts = parts[i + 1].Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+            var encoding = new EncodingSettings
+            {
+                Encoder = encodingParts[0],
+                Resolution = encodingParts[1],
+                Bitrate = encodingParts[2],
+                OutputServices = new List<OutputService>()
+            };
+
+            foreach (var outputPart in outputParts)
+            {
+                var outputServiceParts = outputPart.Split(',');
+                encoding.OutputServices.Add(new OutputService { Url = outputServiceParts[0], StreamKey = outputServiceParts[1] });
+            }
+
+            encodings.Add(encoding);
+        }
+
         return new AppSettings
         {
-            ObsStreamUrl = parts[0],
-            StreamKey = parts[1],
-            SelectedService = parts[2],
-            Bitrate = parts[3],
-            SelectedResolution = parts[4],
-            SelectedEncoder = parts[5]
+            ObsStreamUrl = obsStreamUrl,
+            OriginalStreamOutputs = originalOutputs,
+            Encodings = encodings
         };
     }
-
 
     private byte[] Encrypt(string plainText, string password, byte[] salt)
     {
         using (var aes = Aes.Create())
         {
-            // Use the modern constructor with hash algorithm and iterations
             var key = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
             aes.Key = key.GetBytes(32);
             aes.IV = key.GetBytes(16);
@@ -95,7 +147,7 @@ public class SettingsManager
                 {
                     writer.Write(plainText);
                 }
-                return ms.ToArray(); // Ensure the encrypted data is properly returned
+                return ms.ToArray();
             }
         }
     }
