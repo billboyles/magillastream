@@ -6,11 +6,13 @@ public class OutputService
 
 public class EncodingSettings
 {
-    public string? Encoder { get; set; }  // Encoder for re-encoding
-    public string? Resolution { get; set; }  // Resolution for re-encoding
-    public string? Bitrate { get; set; }  // Bitrate for re-encoding
-    public List<OutputService> OutputServices { get; set; } = new List<OutputService>();  // List of output URLs
+    public string Name { get; set; } // New property for storing the name of the encoding column
+    public string Encoder { get; set; } // Encoder (e.g., libx264)
+    public string Resolution { get; set; } // Resolution (e.g., 1080p)
+    public string Bitrate { get; set; } // Bitrate (e.g., 6000k)
+    public List<OutputService> OutputServices { get; set; } // List of output services (URLs and Stream Keys)
 }
+
 
 public class AppSettings
 {

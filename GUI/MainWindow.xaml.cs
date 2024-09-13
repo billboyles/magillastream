@@ -14,6 +14,7 @@ namespace GUI
         private string _userPassword = string.Empty; // Initialize to avoid warnings
         private FFmpegService _ffmpegService = new FFmpegService(); // Initialize FFmpegService
         private string _settingsFilePath = "settings.enc";
+        private int encodingColumnCount = 1; // Start with 1 for the first column
 
         public MainWindow()
         {
@@ -35,6 +36,7 @@ namespace GUI
                     {
                         new EncodingSettings
                         {
+                            Name = $"Column{encodingColumnCount}",
                             Encoder = "libx264",
                             Resolution = "1080p",
                             Bitrate = "6000k",
@@ -80,6 +82,7 @@ namespace GUI
             }
 
             // For encodings
+            encodingColumnCount = settings.Encodings.Count + 1; // Set the count based on saved encodings
             foreach (var encoding in settings.Encodings)
             {
                 AddEncodingColumn(encoding);
@@ -91,6 +94,7 @@ namespace GUI
         {
             // Example default encoders and settings
             var encoders = _ffmpegService.GetAvailableEncoders();
+            var defaultEncoders = encoders.Count > 0 ? encoders.ToArray() : new[] { "libx264", "h264_qsv", "h264_nvenc" };
         }
 
         // Save current settings
@@ -98,11 +102,30 @@ namespace GUI
         {
             if (_settingsManager == null) return;
 
+            // Gather encoding columns data
+            List<EncodingSettings> encodingSettingsList = new List<EncodingSettings>();
+            foreach (StackPanel column in EncodingColumnsGrid.Children)
+            {
+                var name = ((TextBox)column.Children[1]).Text; // Name field
+                var bitrate = ((TextBox)column.Children[3]).Text; // Bitrate field
+                var encoder = ((ComboBox)column.Children[5]).SelectedItem.ToString(); // Encoder field
+                var resolution = ((ComboBox)column.Children[7]).SelectedItem.ToString(); // Resolution field
+
+                encodingSettingsList.Add(new EncodingSettings
+                {
+                    Name = name,
+                    Bitrate = bitrate,
+                    Encoder = encoder,
+                    Resolution = resolution,
+                    OutputServices = new List<OutputService>() // Logic to gather output services goes here
+                });
+            }
+
             var settings = new AppSettings
             {
                 ObsStreamUrl = ObsStreamUrl.Text,
-                OriginalStreamOutputs = new List<OutputService>(), // Add logic to gather URLs from UI
-                Encodings = new List<EncodingSettings>() // Add logic to gather encoding info from UI
+                OriginalStreamOutputs = new List<OutputService>(), // Logic to gather URLs from UI
+                Encodings = encodingSettingsList // Save gathered encodings
             };
 
             _settingsManager.SaveSettings(settings);
@@ -114,9 +137,9 @@ namespace GUI
             // Create a new StackPanel for each encoding column
             StackPanel encodingColumn = new StackPanel { Margin = new Thickness(10) };
 
-            // OBS Stream URL (for encoding settings)
-            encodingColumn.Children.Add(new TextBlock { Text = "OBS Stream URL", Margin = new Thickness(0, 10, 0, 0) });
-            encodingColumn.Children.Add(new TextBox { Text = encoding.OutputServices[0].Url, Height = 30, Margin = new Thickness(0, 0, 0, 10) });
+            // Name field for the encoding column
+            encodingColumn.Children.Add(new TextBlock { Text = "Name", Margin = new Thickness(0, 10, 0, 0) });
+            encodingColumn.Children.Add(new TextBox { Text = encoding.Name ?? $"Column{encodingColumnCount}", Height = 30, Margin = new Thickness(0, 0, 0, 10) });
 
             // Bitrate
             encodingColumn.Children.Add(new TextBlock { Text = "Bitrate", Margin = new Thickness(0, 10, 0, 0) });
@@ -126,7 +149,7 @@ namespace GUI
             encodingColumn.Children.Add(new TextBlock { Text = "Encoder", Margin = new Thickness(0, 10, 0, 0) });
             ComboBox encoderDropdown = new ComboBox { Height = 30, Width = 200, Margin = new Thickness(0, 0, 0, 10) };
             var encoders = _ffmpegService.GetAvailableEncoders();
-            encoderDropdown.ItemsSource = encoders.Count > 0 ? encoders : new[] { "libx264", "h264_qsv", "h264_nvenc" };
+            encoderDropdown.ItemsSource = encoders.Count > 0 ? encoders.ToArray() : new[] { "libx264", "h264_qsv", "h264_nvenc" };
             encoderDropdown.SelectedItem = encoding.Encoder;
             encodingColumn.Children.Add(encoderDropdown);
 
@@ -144,6 +167,8 @@ namespace GUI
 
             // Add the encoding column to the UniformGrid
             EncodingColumnsGrid.Children.Add(encodingColumn);
+
+            encodingColumnCount++; // Increment the column count for the next added column
         }
 
         private void AddEncodingColumn_Click(object sender, RoutedEventArgs e)
@@ -151,13 +176,13 @@ namespace GUI
             // Logic for adding a new encoding column
             AddEncodingColumn(new EncodingSettings
             {
+                Name = $"Column{encodingColumnCount}", // Default name
                 Encoder = "libx264", // Default encoder
                 Resolution = "1080p", // Default resolution
                 Bitrate = "6000k", // Default bitrate
                 OutputServices = new List<OutputService> { new OutputService { Url = "", StreamKey = "" } }
             });
         }
-
 
         // Handle adding a new URL input to an encoding column
         private void AddUrl_Click(object sender, RoutedEventArgs e)

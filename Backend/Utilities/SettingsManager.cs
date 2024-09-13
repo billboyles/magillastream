@@ -30,10 +30,10 @@ public class SettingsManager
         }
         sb.Append("|");
 
-        // Encodings
+        // Encodings (include the Name field now)
         foreach (var encoding in settings.Encodings)
         {
-            sb.Append($"{encoding.Encoder},{encoding.Resolution},{encoding.Bitrate}|");
+            sb.Append($"{encoding.Name},{encoding.Encoder},{encoding.Resolution},{encoding.Bitrate}|");
             foreach (var output in encoding.OutputServices)
             {
                 sb.Append($"{output.Url},{output.StreamKey ?? string.Empty};");
@@ -99,7 +99,7 @@ public class SettingsManager
             originalOutputs.Add(new OutputService { Url = outputParts[0], StreamKey = outputParts[1] });
         }
 
-        // Deserialize Encodings
+        // Deserialize Encodings (including the Name field)
         var encodings = new List<EncodingSettings>();
         for (int i = 2; i < parts.Length; i += 2)
         {
@@ -108,9 +108,10 @@ public class SettingsManager
 
             var encoding = new EncodingSettings
             {
-                Encoder = encodingParts[0],
-                Resolution = encodingParts[1],
-                Bitrate = encodingParts[2],
+                Name = encodingParts[0], // Name field
+                Encoder = encodingParts[1],
+                Resolution = encodingParts[2],
+                Bitrate = encodingParts[3],
                 OutputServices = new List<OutputService>()
             };
 
