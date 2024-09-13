@@ -48,3 +48,9 @@ obj/
 
 # Ignore NuGet packages folder
 packages/
+
+# Ignore build directories
+build/
+
+# Ignore settings file
+*.enc

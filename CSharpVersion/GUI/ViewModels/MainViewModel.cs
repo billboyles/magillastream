@@ -1,7 +1,7 @@
-using Backend;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
+using Backend;
 
 namespace GUI.ViewModels
 {
@@ -9,8 +9,11 @@ namespace GUI.ViewModels
     {
         private string _obsStreamUrl;
         private string _selectedService;
-        private string _selectedEncoder;
+        private string _streamKey;
+        private string _bitrate;
         private string _selectedResolution;
+        private bool _reEncode;
+        private string _selectedEncoder;
         private FFmpegService _ffmpegService;
 
         public string ObsStreamUrl
@@ -20,6 +23,36 @@ namespace GUI.ViewModels
             {
                 _obsStreamUrl = value;
                 OnPropertyChanged(nameof(ObsStreamUrl));
+            }
+        }
+
+        public string StreamKey
+        {
+            get => _streamKey;
+            set
+            {
+                _streamKey = value;
+                OnPropertyChanged(nameof(StreamKey));
+            }
+        }
+
+        public string Bitrate
+        {
+            get => _bitrate;
+            set
+            {
+                _bitrate = value;
+                OnPropertyChanged(nameof(Bitrate));
+            }
+        }
+
+        public bool ReEncode
+        {
+            get => _reEncode;
+            set
+            {
+                _reEncode = value;
+                OnPropertyChanged(nameof(ReEncode));
             }
         }
 
@@ -37,16 +70,6 @@ namespace GUI.ViewModels
             }
         }
 
-        public string SelectedEncoder
-        {
-            get => _selectedEncoder;
-            set
-            {
-                _selectedEncoder = value;
-                OnPropertyChanged(nameof(SelectedEncoder));
-            }
-        }
-
         public string SelectedResolution
         {
             get => _selectedResolution;
@@ -57,19 +80,22 @@ namespace GUI.ViewModels
             }
         }
 
+        public string SelectedEncoder
+        {
+            get => _selectedEncoder;
+            set
+            {
+                _selectedEncoder = value;
+                OnPropertyChanged(nameof(SelectedEncoder));
+            }
+        }
+
         public ICommand StartStreamCommand { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        // Constructor
         public MainViewModel()
         {
-            // Initialize fields
-            _obsStreamUrl = string.Empty;
-            _selectedService = string.Empty;
-            _selectedEncoder = string.Empty;
-            _selectedResolution = string.Empty;
-
             _ffmpegService = new FFmpegService();
 
             OutputServices = new ObservableCollection<string> { "YouTube", "Twitch" };
@@ -95,11 +121,11 @@ namespace GUI.ViewModels
             {
                 new Tuple<string, string, bool, string, string, string>(
                     SelectedService,    // Service URL or identifier
-                    "YourStreamKey",    // Replace with actual stream key
-                    true,               // Assume re-encode is true for this example
-                    "6000k",            // Bitrate (you could use the user input instead)
-                    SelectedResolution,  // Resolution from the dropdown
-                    SelectedEncoder      // Encoder from the dropdown
+                    StreamKey,          // Stream key entered by the user
+                    ReEncode,           // Re-encode flag
+                    Bitrate,            // Bitrate
+                    SelectedResolution, // Resolution
+                    SelectedEncoder     // Encoder
                 )
             };
 

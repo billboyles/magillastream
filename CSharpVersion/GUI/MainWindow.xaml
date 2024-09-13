@@ -8,30 +8,30 @@
     <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center" Width="400">
         <!-- OBS Stream URL -->
         <TextBlock Text="OBS Stream URL" Margin="0,10"/>
-        <TextBox Text="{Binding ObsStreamUrl}" Height="30" Margin="0,0,0,10"/>
+        <TextBox x:Name="ObsStreamUrl" Text="{Binding ObsStreamUrl}" Height="30" Margin="0,0,0,10"/>
 
         <!-- Output Services -->
         <TextBlock Text="Output Services" Margin="10,10,0,0"/>
-        <ComboBox ItemsSource="{Binding OutputServices}" SelectedItem="{Binding SelectedService}" Height="30" Width="300" Margin="0,5"/>
+        <ComboBox x:Name="ServiceDropdown" ItemsSource="{Binding OutputServices}" SelectedItem="{Binding SelectedService}" Height="30" Width="300" Margin="0,5"/>
 
         <!-- Stream Key -->
         <TextBlock Text="Stream Key" Margin="10,10,0,0"/>
-        <TextBox Text="{Binding StreamKey}" Height="30" Margin="0,0,0,10"/>
+        <TextBox x:Name="StreamKeyTextBox" Text="{Binding StreamKey}" Height="30" Margin="0,0,0,10"/>
 
         <!-- Bitrate -->
         <TextBlock Text="Bitrate" Margin="10,10,0,0"/>
-        <TextBox Text="{Binding Bitrate}" Height="30" Margin="0,0,0,10"/>
+        <TextBox x:Name="BitrateTextBox" Text="{Binding Bitrate}" Height="30" Margin="0,0,0,10"/>
 
         <!-- Resolution -->
         <TextBlock Text="Resolution" Margin="10,10,0,0"/>
-        <ComboBox ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}" Height="30" Width="300" Margin="0,5"/>
+        <ComboBox x:Name="ResolutionDropdown" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}" Height="30" Width="300" Margin="0,5"/>
 
         <!-- Re-Encode Option -->
         <CheckBox Content="Re-encode" IsChecked="{Binding ReEncode}" Margin="10"/>
 
         <!-- Encoder Selection -->
         <TextBlock Text="Encoder" Margin="10,10,0,0"/>
-        <ComboBox ItemsSource="{Binding Encoders}" SelectedItem="{Binding SelectedEncoder}" Height="30" Width="300" Margin="0,5"/>
+        <ComboBox x:Name="EncoderDropdown" ItemsSource="{Binding Encoders}" SelectedItem="{Binding SelectedEncoder}" Height="30" Width="300" Margin="0,5"/>
 
         <!-- Start Service Button -->
         <Button Content="Start Service" Command="{Binding StartStreamCommand}" Width="200" Height="40" Margin="10"/>
