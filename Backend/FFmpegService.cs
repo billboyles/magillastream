@@ -80,12 +80,12 @@ namespace Backend
             return _ffmpegUtils.GetSupportedCodecs();
         }
 
-        public void StartStream(string obsStreamUrl, List<Tuple<string, string, bool, string, string, string>> outputServices, bool enablePTSGeneration)
+        public async Task StartStream(string obsStreamUrl, List<Tuple<string, string, bool, string, string, string>> outputServices, bool enablePTSGeneration)
         {
             if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
             {
                 Logger.LogWarning("An existing FFmpeg process is running. Stopping it.");
-                _ffmpegProcess.Kill();
+                await Task.Run(() => _ffmpegProcess.Kill());
                 _ffmpegProcess.Dispose();
                 _ffmpegProcess = null;
             }
@@ -181,18 +181,18 @@ namespace Backend
                     }
                 };
 
-                _ffmpegProcess.Start();
+                await Task.Run(() => _ffmpegProcess.Start());
                 _ffmpegProcess.BeginOutputReadLine();
                 _ffmpegProcess.BeginErrorReadLine();
             }
         }
 
-        public void StopStream()
+        public async Task StopStream()
         {
             if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
             {
                 Logger.LogInfo("Stopping FFmpeg process.");
-                _ffmpegProcess.Kill();
+                await Task.Run(() => _ffmpegProcess.Kill());
                 _ffmpegProcess.Dispose();
                 _ffmpegProcess = null;
             }
