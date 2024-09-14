@@ -25,6 +25,6 @@ namespace Utilities
     {
         public string Url { get; set; } = string.Empty;  // The URL of the ingest server
         public string StreamKey { get; set; } = string.Empty;  // Stream key specific to this output URL
-        public Dictionary<string, string> QueryStrings { get; set; } = new Dictionary<string, string>();  // Optional query strings
+        public string Template { get; set; } = string.Empty;  // Template for the URL
     }
 }

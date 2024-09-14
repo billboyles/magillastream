@@ -2,7 +2,7 @@
 public static class UrlGenerator
 {
     // Generates the full URL by replacing the stream key
-    public static string GenerateFullUrl(string baseUrl, string streamKey)
+    public static string GenerateFullUrl(string baseUrl, string streamKey, string Template)
     {
         var fullUrl = baseUrl.Replace("{streamKey}", streamKey);
 
@@ -10,7 +10,7 @@ public static class UrlGenerator
     }
 
     // Generates the URL with the stream key masked for display purposes
-    public static string GenerateUrlWithMaskedKey(string baseUrl, string streamKey)
+    public static string GenerateUrlWithMaskedKey(string baseUrl, string streamKey, string Template)
     {
         string maskedKey = new string('*', streamKey.Length);
         string fullUrl = baseUrl.Replace("{streamKey}", maskedKey);

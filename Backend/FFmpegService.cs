@@ -14,7 +14,7 @@ namespace Backend
                 foreach (var outputUrl in group.OutputUrls)
                 {
                     // Get the full URL, stream key decrypted internally
-                    var fullUrl = UrlGenerator.GenerateFullUrl(outputUrl.Url, outputUrl.StreamKey);
+                    var fullUrl = UrlGenerator.GenerateFullUrl(outputUrl.Url, outputUrl.StreamKey, outputUrl.Template);
 
                     // Build FFmpeg command using the group's encoding settings and profile's incoming URL
                     var ffmpegArgs = BuildFFmpegCommand(group, profile.IncomingUrl, fullUrl);
