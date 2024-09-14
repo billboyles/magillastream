@@ -18,7 +18,7 @@ public class ProfileManager
 
         // Get profile files and remove the file extension for display
         return Directory.GetFiles(_profileDirectory, "*.enc")
-            .Select(Path.GetFileNameWithoutExtension)
+            .Select(profile => Path.GetFileNameWithoutExtension(profile))
             .Where(profile => profile != null) // Ensure no null values
             .ToList()!;
     }
@@ -33,7 +33,7 @@ public class ProfileManager
         }
 
         // Verify profile does not already exist
-        var profilePath = Path.Combine(_profileDirectory, $"settings_{profileName}.enc");
+        var profilePath = Path.Combine(_profileDirectory, $"{profileName}.enc");
         if (File.Exists(profilePath))
         {
             Logger.LogError($"Profile {profileName} already exists.");
@@ -73,7 +73,7 @@ public class ProfileManager
     public void DeleteProfile(string profileName)
     {
         // Construct the file path for the profile
-        var filePath = Path.Combine(_profileDirectory, $"settings_{profileName}.enc");
+        var filePath = Path.Combine(_profileDirectory, $"{profileName}.enc");
 
         // If the file exists, delete it
         if (File.Exists(filePath))
