@@ -9,7 +9,7 @@ public class SettingsManager
 {
     private readonly string _password;
     private readonly string _profileName;
-    private string _filePath => $"settings_{_profileName}.enc"; // Profile-specific settings file
+    private string _filePath => $"profiles/settings_{_profileName}.enc"; // Profile-specific settings file
 
     public SettingsManager(string password, string profileName)
     {
@@ -20,36 +20,45 @@ public class SettingsManager
     // Save settings to a file
     public void SaveSettings(AppSettings settings)
     {
-        var sb = new StringBuilder();
-
-        // OBS Stream URL
-        sb.Append($"{settings.ObsStreamUrl}|");
-
-        // Original Stream Outputs
-        foreach (var output in settings.OriginalStreamOutputs)
+        try
         {
-            sb.Append($"{output.Url},{output.StreamKey ?? string.Empty};");
-        }
-        sb.Append("|");
+            var sb = new StringBuilder();
 
-        // Encodings
-        foreach (var encoding in settings.Encodings)
-        {
-            sb.Append($"{encoding.Name},{encoding.Encoder},{encoding.Resolution},{encoding.Bitrate}|");
-            foreach (var output in encoding.OutputServices)
+            // OBS Stream URL
+            sb.Append($"{settings.ObsStreamUrl}|");
+
+            // Original Stream Outputs
+            foreach (var output in settings.OriginalStreamOutputs)
             {
                 sb.Append($"{output.Url},{output.StreamKey ?? string.Empty};");
             }
             sb.Append("|");
+
+            // Encodings
+            foreach (var encoding in settings.Encodings)
+            {
+                sb.Append($"{encoding.Name},{encoding.Encoder},{encoding.Resolution},{encoding.Bitrate}|");
+                foreach (var output in encoding.OutputServices)
+                {
+                    sb.Append($"{output.Url},{output.StreamKey ?? string.Empty};");
+                }
+                sb.Append("|");
+            }
+
+            var salt = GenerateSalt();
+            var encryptedData = Encrypt(sb.ToString(), _password, salt);
+            var dataToStore = new byte[salt.Length + encryptedData.Length];
+            Buffer.BlockCopy(salt, 0, dataToStore, 0, salt.Length);
+            Buffer.BlockCopy(encryptedData, 0, dataToStore, salt.Length, encryptedData.Length);
+
+            Logger.LogInfo($"Saving settings to path: {_filePath}");
+            File.WriteAllBytes(_filePath, dataToStore);
+            Logger.LogInfo($"Settings saved successfully at: {_filePath}");
         }
-
-        var salt = GenerateSalt();
-        var encryptedData = Encrypt(sb.ToString(), _password, salt);
-        var dataToStore = new byte[salt.Length + encryptedData.Length];
-        Buffer.BlockCopy(salt, 0, dataToStore, 0, salt.Length);
-        Buffer.BlockCopy(encryptedData, 0, dataToStore, salt.Length, encryptedData.Length);
-
-        File.WriteAllBytes(_filePath, dataToStore);
+        catch (Exception ex)
+        {
+            Logger.LogError($"Failed to save profile: {ex.Message}");
+        }
     }
 
     // Load settings from a file
@@ -57,13 +66,14 @@ public class SettingsManager
     {
         if (!File.Exists(_filePath))
         {
+            Logger.LogWarning("Settings file not found. Returning default settings.");
             return new AppSettings
             {
-                Name = "Default Profile",
-                Encoder = "libx264",
-                Resolution = "1080p",
-                Bitrate = "6000k",
-                OutputServices = new List<OutputService>(),
+                Name = "Default Profile",  // Ensure Name is set
+                Encoder = "libx264",       // Default Encoder
+                Resolution = "1080p",      // Default Resolution
+                Bitrate = "6000k",         // Default Bitrate
+                OutputServices = new List<OutputService>(),  // Initialize empty list
                 ObsStreamUrl = "rtmp://default-url",
                 OriginalStreamOutputs = new List<OutputService>(),
                 Encodings = new List<EncodingSettings>()
@@ -85,7 +95,7 @@ public class SettingsManager
         foreach (var outputPart in originalOutputParts)
         {
             var outputParts = outputPart.Split(',');
-            originalOutputs.Add(new OutputService { Url = outputParts[0], StreamKey = outputParts.Length > 1 ? outputParts[1] : string.Empty });
+            originalOutputs.Add(new OutputService { Url = outputParts[0], StreamKey = outputParts[1] });
         }
 
         var encodings = new List<EncodingSettings>();
@@ -106,7 +116,7 @@ public class SettingsManager
             foreach (var outputPart in outputParts)
             {
                 var outputServiceParts = outputPart.Split(',');
-                encoding.OutputServices.Add(new OutputService { Url = outputServiceParts[0], StreamKey = outputServiceParts.Length > 1 ? outputServiceParts[1] : string.Empty });
+                encoding.OutputServices.Add(new OutputService { Url = outputServiceParts[0], StreamKey = outputServiceParts[1] });
             }
 
             encodings.Add(encoding);
@@ -114,11 +124,11 @@ public class SettingsManager
 
         return new AppSettings
         {
-            Name = "Loaded Profile",
-            Encoder = "libx264",
-            Resolution = "1080p",
+            Name = "Default Profile",  
+            Encoder = "libx264",       
+            Resolution = "1080p",      
             Bitrate = "6000k",
-            OutputServices = new List<OutputService>(),
+            OutputServices = new List<OutputService>(),         
             ObsStreamUrl = obsStreamUrl,
             OriginalStreamOutputs = originalOutputs,
             Encodings = encodings
