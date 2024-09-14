@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows;
-using Utilities; // ProfileManager and Profile are in Utilities
-using Backend;  // FFmpegService is in Backend
+using System.Windows.Controls;
+using Utilities;
+using Backend;
 
 namespace Frontend
 {
@@ -10,12 +11,19 @@ namespace Frontend
     {
         private ProfileManager _profileManager;
         private FFmpegService _ffmpegService;
+        private int outputGroupCount = 1; // Track how many output groups are present
 
         public MainWindow()
         {
             InitializeComponent();
             _profileManager = new ProfileManager();
             _ffmpegService = new FFmpegService();
+
+            // Attach event handlers using +=
+            createProfileButton.Click += CreateProfileButton_Click;
+            startStreamButton.Click += StartStreamButton_Click;
+            stopStreamButton.Click += StopStreamButton_Click;
+            addOutputGroupButton.Click += AddOutputGroup_Click;
 
             // Load profiles into the ComboBox
             LoadProfiles();
@@ -60,6 +68,46 @@ namespace Frontend
             }
         }
 
+        // Event handler for adding a new Output URL (this will be implemented later)
+        private void AddOutputUrl_Click(object sender, RoutedEventArgs e)
+        {
+            // Logic for adding an Output URL goes here
+            MessageBox.Show("Add Output URL clicked.");
+        }
+
+        // Event handler for adding a new Output Group dynamically
+        private void AddOutputGroup_Click(object sender, RoutedEventArgs e)
+        {
+            // Create a new Output Group dynamically
+            GroupBox newGroup = new GroupBox
+            {
+                Header = $"Output Group {++outputGroupCount}",
+                Width = 200,
+                Height = 200,
+                Margin = new Thickness(10)
+            };
+
+            StackPanel groupStackPanel = new StackPanel();
+            TextBlock encodingSettings = new TextBlock { Text = "Encoding Settings Area", HorizontalAlignment = HorizontalAlignment.Center };
+            TextBlock outputUrl = new TextBlock { Text = "OutputURL Area", HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
+            Button addOutputUrl = new Button { Content = "+", Width = 30, Height = 30, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(10, 5, 10, 5) };
+
+            // Attach event handler to the new "Add URL" button
+            addOutputUrl.Click += AddOutputUrl_Click;
+
+            groupStackPanel.Children.Add(encodingSettings);
+            groupStackPanel.Children.Add(outputUrl);
+            groupStackPanel.Children.Add(addOutputUrl);
+
+            newGroup.Content = groupStackPanel;
+
+            // Add the new output group to the OutputGroupStack
+            OutputGroupStack.Children.Add(newGroup);
+
+            // Adjust the window size to accommodate the new group
+            this.Width += 220;
+        }
+
         // Event handler for starting the stream
         private void StartStreamButton_Click(object sender, RoutedEventArgs e)
         {
@@ -94,7 +142,6 @@ namespace Frontend
         {
             // Logic to stop the streaming process (terminate the FFmpeg process)
             MessageBox.Show("Stream stopped.");
-            // Example: If you started FFmpeg as a process, you would kill that process here
         }
 
         // Load profiles into the ComboBox

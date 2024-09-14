@@ -7,44 +7,38 @@
         mc:Ignorable="d"
         Title="Streaming App" Height="450" Width="800">
     <Grid Margin="10">
+        <!-- Left Section -->
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top">
+            <TextBlock Text="Profile" FontWeight="Bold" FontSize="14"/>
+            <ComboBox Name="ProfileComboBox" Width="150"/>
+            <Button Name="createProfileButton" Content="Create Profile" Width="150" Margin="0,10,0,10"/>
+            
+            <TextBlock Text="Input URL" FontWeight="Bold"/>
+            <TextBox Name="IncomingUrlTextBox" Width="150"/>
+            <CheckBox Name="GeneratePTSCheckBox" Content="Generate PTS"/>
 
-        <!-- Profile Section -->
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,10">
-            <TextBlock Text="Select Profile:" VerticalAlignment="Center"/>
-            <ComboBox Name="ProfileComboBox" Width="150" Margin="10,0,0,0"/>
-            <Button Content="Create New Profile" Width="150" Margin="10,0,0,0" Click="CreateProfileButton_Click"/>
+            <!-- Start/Stop Buttons -->
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <Button Name="startStreamButton" Content="Start" Background="Green" Foreground="White" Width="75"/>
+                <Button Name="stopStreamButton" Content="Stop" Background="Red" Foreground="White" Width="75" Margin="10,0,0,0"/>
+            </StackPanel>
+            
+            <Button Name="saveProfileButton" Content="Save" Background="LightBlue" Width="150" Margin="0,10,0,0"/>
         </StackPanel>
 
-        <!-- Stream Settings Section -->
-        <GroupBox Header="Stream Settings" Margin="0,60,0,60">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Incoming URL -->
-                <TextBlock Grid.Column="0" Text="Incoming URL:" VerticalAlignment="Center" Margin="0,10"/>
-                <TextBox Grid.Column="1" Name="IncomingUrlTextBox" Margin="5"/>
-
-                <!-- Stream Key -->
-                <TextBlock Grid.Column="0" Text="Stream Key:" VerticalAlignment="Center" Margin="0,10"/>
-                <PasswordBox Grid.Column="1" Name="StreamKeyTextBox" Margin="5"/>
-
-                <!-- Output Group -->
-                <TextBlock Grid.Column="0" Text="Output Group:" VerticalAlignment="Center" Margin="0,10"/>
-                <ComboBox Grid.Column="1" Name="OutputGroupComboBox" Margin="5"/>
-
-                <!-- Generate PTS Checkbox -->
-                <CheckBox Grid.Column="0" Name="GeneratePTSCheckBox" Content="Generate PTS" VerticalAlignment="Center" Margin="0,10"/>
-                
-                <!-- Start/Stop Buttons -->
-                <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20">
-                    <Button Content="Start Stream" Width="100" Click="StartStreamButton_Click"/>
-                    <Button Content="Stop Stream" Width="100" Margin="20,0,0,0" Click="StopStreamButton_Click"/>
+        <!-- Output Group Section -->
+        <StackPanel Name="OutputGroupStack" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="200,0,0,0">
+            <!-- Initial Output Group (default) -->
+            <GroupBox Header="Output Group 1" Width="200" Height="200" Margin="10">
+                <StackPanel>
+                    <TextBlock Text="Encoding Settings Area" HorizontalAlignment="Center"/>
+                    <TextBlock Text="OutputURL Area" HorizontalAlignment="Center" Margin="10,0,0,0"/>
+                    <Button Name="addOutputUrlButton" Content="+" Width="30" Height="30" HorizontalAlignment="Center" Margin="10,5,10,5"/>
                 </StackPanel>
-            </Grid>
-        </GroupBox>
+            </GroupBox>
+        </StackPanel>
 
+        <!-- Add Output Group Button -->
+        <Button Name="addOutputGroupButton" Content="+" Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10"/>
     </Grid>
 </Window>
