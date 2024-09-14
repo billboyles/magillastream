@@ -13,11 +13,11 @@ namespace Backend
                 // Iterate through each output URL in the group
                 foreach (var outputUrl in group.OutputUrls)
                 {
-                    // Get the full URL, stream key decrypted internally
-                    var fullUrl = UrlGenerator.GenerateFullUrl(outputUrl.Url, outputUrl.StreamKey, outputUrl.Template);
+                    // Get the full URL using the OutputURL class method
+                    var fullUrl = outputUrl.GenerateFullUrl();
 
                     // Build FFmpeg command using the group's encoding settings and profile's incoming URL
-                    var ffmpegArgs = BuildFFmpegCommand(group, profile.IncomingUrl, fullUrl);
+                    var ffmpegArgs = BuildFFmpegCommand(group, profile.IncomingUrl, fullUrl, profile.GeneratePTS);
 
                     // Start the FFmpeg process
                     StartProcess(ffmpegArgs);
@@ -25,22 +25,54 @@ namespace Backend
             }
         }
 
-        private string BuildFFmpegCommand(OutputGroup group, string incomingUrl, string outputUrl)
+        private string BuildFFmpegCommand(OutputGroup group, string incomingUrl, string outputUrl, bool generatePTS)
         {
-            // Get the bitrate from the group settings
-            string bitrate = group.Settings.ContainsKey("bitrate") ? group.Settings["bitrate"] : "6000k";  // Default to 6000k if not provided
+            string command;
+            string bufferSize = CalculateBufferSize(group.EncodingSettings);
 
-            // Construct the FFmpeg command based on encoding settings and stream URLs
-            if (string.IsNullOrEmpty(group.EncodingSettings))
+            // PTS generation logic
+            string ptsOption = generatePTS ? "-fflags +genpts" : string.Empty;
+
+            if (group.ForwardOriginal)
             {
-                // Use the same encoding as the incoming stream
-                return $"-i {incomingUrl} -c copy -b:v {bitrate} -f flv {outputUrl}";
+                // Forward the original stream without re-encoding
+                command = $"-i {incomingUrl} -c copy {ptsOption} -f flv {outputUrl}";
+            }
+            else if (group.EncodingSettings != null)
+            {
+                // Use custom encoding settings from the group
+                var encodingSettings = group.EncodingSettings;
+                command = $"-i {incomingUrl} -c:v {encodingSettings.VideoEncoder} " +
+                          $"-preset {encodingSettings.EncoderPreset} -s {encodingSettings.Resolution} " +
+                          $"-r {encodingSettings.Fps} -b:v {encodingSettings.Bitrate} " +
+                          $"-c:a {encodingSettings.AudioCodec} -b:a {encodingSettings.AudioBitrate} " +
+                          $"-bufsize {bufferSize} {ptsOption} -f flv {outputUrl}";
             }
             else
             {
-                // Apply custom encoding settings
-                return $"-i {incomingUrl} {group.EncodingSettings} -b:v {bitrate} -f flv {outputUrl}";
+                // Fallback to default behavior if EncodingSettings is missing
+                command = $"-i {incomingUrl} -c copy {ptsOption} -f flv {outputUrl}";
             }
+
+            return command;
+        }
+
+        // Function to calculate buffer size as 2x the sum of video and audio bitrates
+        private string CalculateBufferSize(Settings? encodingSettings)
+        {
+            if (encodingSettings != null)
+            {
+                // Extract video and audio bitrates (remove "k" and convert to integer)
+                int videoBitrate = int.Parse(encodingSettings.Bitrate.Replace("k", ""));
+                int audioBitrate = int.Parse(encodingSettings.AudioBitrate.Replace("k", ""));
+
+                // Buffer size is 2x the sum of video and audio bitrates
+                int bufferSize = 2 * (videoBitrate + audioBitrate);
+                return bufferSize + "k";
+            }
+
+            // Default buffer size if no settings provided
+            return "12000k"; // Default 12Mbps buffer size
         }
 
         private void StartProcess(string ffmpegArgs)
