@@ -23,7 +23,7 @@ namespace Utilities
     {
         public string Name { get; set; } = string.Empty;  // The name of the output group
         public bool ForwardOriginal { get; set; } = false;  // Indicates if the original stream is forwarded without re-encoding
-        public List<OutputURL> OutputUrls { get; set; } = new List<OutputURL>();  // 0 or more output URLs
+        public List<OutputURL> OutputURLs { get; set; } = new List<OutputURL>();  // 0 or more output URLs
         public Settings? EncodingSettings { get; set; }  // Encoding settings if not forwarding the original stream
 
         // Validation method to check that either ForwardOriginal is true or EncodingSettings exists

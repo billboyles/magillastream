@@ -5,79 +5,87 @@ namespace Backend
 {
     public class FFmpegService
     {
+        // Dictionary to store running FFmpeg processes by output group index
+        private readonly Dictionary<int, Process> _ffmpegProcesses = new();
+
         // Manages the interaction with FFmpeg, including starting and stopping streams.
         public void StartFFmpegProcess(Profile profile)
         {
+            int groupCounter = 0; // Counter to uniquely identify each output group
+
             foreach (var group in profile.OutputGroups)
             {
-                // Iterate through each output URL in the group
-                foreach (var outputUrl in group.OutputUrls)
-                {
-                    // Get the full URL using the OutputURL class method
-                    var fullUrl = outputUrl.GenerateFullUrl();
+                // Step 1: Create encoding command for this output group
+                string encodingCommand = BuildEncodingCommand(group, profile.IncomingUrl, profile.GeneratePTS);
 
-                    // Build FFmpeg command using the group's encoding settings and profile's incoming URL
-                    var ffmpegArgs = BuildFFmpegCommand(group, profile.IncomingUrl, fullUrl, profile.GeneratePTS);
+                // Step 2: Create tee command for output URLs in this group
+                string teeCommand = CreateTeeCommand(group.OutputURLs);
 
-                    // Start the FFmpeg process
-                    StartProcess(ffmpegArgs);
-                }
+                // Step 3: Combine encoding and tee commands into the final FFmpeg command
+                string finalCommand = encodingCommand + " -f tee " + teeCommand;
+
+                // Step 4: Start the FFmpeg process for the group
+                var process = StartProcess(finalCommand);
+
+                // Store the process using the groupCounter as the key
+                _ffmpegProcesses[groupCounter] = process;
+                groupCounter++; // Increment the counter for each group
             }
         }
 
-        private string BuildFFmpegCommand(OutputGroup group, string incomingUrl, string outputUrl, bool generatePTS)
+        // Builds the encoding command based on the group's settings
+        private string BuildEncodingCommand(OutputGroup group, string incomingUrl, bool generatePTS)
         {
-            string command;
-            string bufferSize = CalculateBufferSize(group.EncodingSettings);
-
-            // PTS generation logic
             string ptsOption = generatePTS ? "-fflags +genpts" : string.Empty;
+            string command = $"-i {incomingUrl} {ptsOption}";
 
             if (group.ForwardOriginal)
             {
                 // Forward the original stream without re-encoding
-                command = $"-i {incomingUrl} -c copy {ptsOption} -f flv {outputUrl}";
+                command += " -c copy";
             }
             else if (group.EncodingSettings != null)
             {
-                // Use custom encoding settings from the group
+                // Use custom encoding settings for the group
                 var encodingSettings = group.EncodingSettings;
-                command = $"-i {incomingUrl} -c:v {encodingSettings.VideoEncoder} " +
-                          $"-preset {encodingSettings.EncoderPreset} -s {encodingSettings.Resolution} " +
-                          $"-r {encodingSettings.Fps} -b:v {encodingSettings.Bitrate} " +
-                          $"-c:a {encodingSettings.AudioCodec} -b:a {encodingSettings.AudioBitrate} " +
-                          $"-bufsize {bufferSize} {ptsOption} -f flv {outputUrl}";
-            }
-            else
-            {
-                // Fallback to default behavior if EncodingSettings is missing
-                command = $"-i {incomingUrl} -c copy {ptsOption} -f flv {outputUrl}";
+                string bufferSize = CalculateBufferSize(encodingSettings);
+
+                command += $" -s {encodingSettings.Resolution} -c:v {encodingSettings.VideoEncoder} " +
+                           $"-b:v {encodingSettings.Bitrate} -c:a {encodingSettings.AudioCodec} " +
+                           $"-b:a {encodingSettings.AudioBitrate} -bufsize {bufferSize}";
             }
 
             return command;
         }
 
-        // Function to calculate buffer size as 2x the sum of video and audio bitrates
-        private string CalculateBufferSize(Settings? encodingSettings)
+        // Creates the tee command for duplicating output to multiple URLs
+        private string CreateTeeCommand(List<OutputURL> outputURLs)
         {
-            if (encodingSettings != null)
-            {
-                // Extract video and audio bitrates (remove "k" and convert to integer)
-                int videoBitrate = int.Parse(encodingSettings.Bitrate.Replace("k", ""));
-                int audioBitrate = int.Parse(encodingSettings.AudioBitrate.Replace("k", ""));
+            List<string> teeOutputs = new();
 
-                // Buffer size is 2x the sum of video and audio bitrates
-                int bufferSize = 2 * (videoBitrate + audioBitrate);
-                return bufferSize + "k";
+            // Iterate over each output URL and add to the tee list
+            foreach (var outputURL in outputURLs)
+            {
+                string fullUrl = outputURL.GenerateFullUrl();
+                teeOutputs.Add($"[f=flv]{fullUrl}");
             }
 
-            // Default buffer size if no settings provided
-            return "12000k"; // Default 12Mbps buffer size
+            // Join all tee outputs with the pipe (|) symbol
+            return $"\"{string.Join('|', teeOutputs)}\"";
         }
 
-        private void StartProcess(string ffmpegArgs)
+        // Function to calculate buffer size as 2x the sum of video and audio bitrates
+        private string CalculateBufferSize(Settings encodingSettings)
         {
-            // Start the FFmpeg process with the generated command
+            int videoBitrate = int.Parse(encodingSettings.Bitrate.Replace("k", ""));
+            int audioBitrate = int.Parse(encodingSettings.AudioBitrate.Replace("k", ""));
+            int bufferSize = 2 * (videoBitrate + audioBitrate);
+            return bufferSize + "k";
+        }
+
+        // Start the FFmpeg process
+        private Process StartProcess(string ffmpegArgs)
+        {
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -90,6 +98,38 @@ namespace Backend
                 }
             };
             process.Start();
+            return process;
+        }
+
+        // Method to stop all running FFmpeg processes
+        public void StopFFmpegProcess()
+        {
+            foreach (var process in _ffmpegProcesses.Values)
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(); // Gracefully kill the process
+                    process.WaitForExit();
+                }
+            }
+
+            _ffmpegProcesses.Clear(); // Clear the dictionary after stopping all processes
+        }
+
+        // Method to stop a specific process by output group index
+        public void StopFFmpegProcess(int groupIndex)
+        {
+            if (_ffmpegProcesses.ContainsKey(groupIndex))
+            {
+                var process = _ffmpegProcesses[groupIndex];
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    process.WaitForExit();
+                }
+
+                _ffmpegProcesses.Remove(groupIndex); // Remove the stopped process
+            }
         }
     }
 }
