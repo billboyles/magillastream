@@ -25,7 +25,6 @@ namespace Utilities
     {
         public string Url { get; set; } = string.Empty;  // The URL of the ingest server
         public string StreamKey { get; set; } = string.Empty;  // Stream key specific to this output URL
-        public bool UseBackup { get; set; } = false;  // Whether to use a backup URL
         public Dictionary<string, string> QueryStrings { get; set; } = new Dictionary<string, string>();  // Optional query strings
     }
 }

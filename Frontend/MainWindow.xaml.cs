@@ -78,21 +78,39 @@ namespace Frontend
         // Event handler for adding a new Output Group dynamically
         private void AddOutputGroup_Click(object sender, RoutedEventArgs e)
         {
+            // Increment the output group count
+            outputGroupCount++;
+
             // Create a new Output Group dynamically
             GroupBox newGroup = new GroupBox
             {
-                Header = $"Output Group {++outputGroupCount}",
-                Width = 200,
-                Height = 200,
-                Margin = new Thickness(10)
+                Header = $"Output Group {outputGroupCount}",
+                Style = (Style)FindResource("GroupBoxStyle")
             };
 
             StackPanel groupStackPanel = new StackPanel();
-            TextBlock encodingSettings = new TextBlock { Text = "Encoding Settings Area", HorizontalAlignment = HorizontalAlignment.Center };
-            TextBlock outputUrl = new TextBlock { Text = "OutputURL Area", HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
-            Button addOutputUrl = new Button { Content = "+", Width = 30, Height = 30, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(10, 5, 10, 5) };
 
-            // Attach event handler to the new "Add URL" button
+            TextBlock encodingSettings = new TextBlock
+            {
+                Text = "Encoding Settings Area",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            TextBlock outputUrl = new TextBlock
+            {
+                Text = "Output URL Area",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            Button addOutputUrl = new Button
+            {
+                Style = (Style)FindResource("AddButtonStyle"),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            // Attach event handler to the new "Add Output URL" button
             addOutputUrl.Click += AddOutputUrl_Click;
 
             groupStackPanel.Children.Add(encodingSettings);
@@ -103,9 +121,6 @@ namespace Frontend
 
             // Add the new output group to the OutputGroupStack
             OutputGroupStack.Children.Add(newGroup);
-
-            // Adjust the window size to accommodate the new group
-            this.Width += 220;
         }
 
         // Event handler for starting the stream
