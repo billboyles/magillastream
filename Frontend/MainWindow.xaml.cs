@@ -282,7 +282,17 @@ namespace Frontend
         // Event handler for stopping the stream
         private void StopStreamButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Stream stopped.");
+            try
+            {
+                // Call the FFmpegService to stop all running FFmpeg processes
+                _ffmpegService.StopFFmpegProcess();
+
+                MessageBox.Show("All streams have been stopped.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error stopping stream: {ex.Message}");
+            }
         }
     }
 }
