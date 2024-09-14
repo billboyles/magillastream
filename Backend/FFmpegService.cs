@@ -1,205 +1,63 @@
 using System.Diagnostics;
-using System;
-using System.Collections.Generic;
-using Backend.Utilities;
+using Utilities;
 
 namespace Backend
 {
     public class FFmpegService
     {
-        private Process? _ffmpegProcess;
-        private readonly string _ffmpegPath;
-        private readonly FFmpegUtils _ffmpegUtils;
-
-        public FFmpegService()
+        // Manages the interaction with FFmpeg, including starting and stopping streams.
+        public void StartFFmpegProcess(Profile profile)
         {
-            _ffmpegPath = Path.Combine(AppContext.BaseDirectory, "ffmpeg", "ffmpeg.exe");
-            _ffmpegProcess = null;
-            _ffmpegUtils = new FFmpegUtils();
-        }
-
-        public static string SanitizeUrl(string url)
-        {
-            url = url.Trim();
-            Logger.LogDebug($"Sanitizing URL: {url}");
-            if (url.EndsWith("/"))
-                url = url.Substring(0, url.Length - 1);
-            if (url.Contains("?"))
-                url = url.Split('?')[0];
-            if (url.StartsWith("http://") || url.StartsWith("https://") || url.StartsWith("rtmp://"))
-                return url;
-            Logger.LogWarning("Invalid URL format");
-            return string.Empty;
-        }
-
-        public static string SanitizeStreamKey(string key)
-        {
-            Logger.LogDebug($"Sanitizing Stream Key: {key}");
-            return key.Trim();
-        }
-
-        public static string SanitizeBitrate(string bitrate, string defaultBitrate = "6000k")
-        {
-            Logger.LogDebug($"Sanitizing Bitrate: {bitrate}");
-            bitrate = bitrate.Trim().ToLower();
-            if (bitrate.EndsWith("k") && int.TryParse(bitrate.TrimEnd('k'), out _))
+            foreach (var group in profile.OutputGroups)
             {
-                Logger.LogDebug($"Valid bitrate with 'k': {bitrate}");
-                return bitrate;
+                // Iterate through each output URL in the group
+                foreach (var outputUrl in group.OutputUrls)
+                {
+                    // Get the full URL, stream key decrypted internally
+                    var fullUrl = UrlGenerator.GenerateFullUrl(outputUrl.Url, outputUrl.StreamKey, outputUrl.UseBackup);
+
+                    // Build FFmpeg command using the group's encoding settings and profile's incoming URL
+                    var ffmpegArgs = BuildFFmpegCommand(group, profile.IncomingUrl, fullUrl);
+
+                    // Start the FFmpeg process
+                    StartProcess(ffmpegArgs);
+                }
             }
-            else if (int.TryParse(bitrate, out _))
+        }
+
+        private string BuildFFmpegCommand(OutputGroup group, string incomingUrl, string outputUrl)
+        {
+            // Get the bitrate from the group settings
+            string bitrate = group.Settings.ContainsKey("bitrate") ? group.Settings["bitrate"] : "6000k";  // Default to 6000k if not provided
+
+            // Construct the FFmpeg command based on encoding settings and stream URLs
+            if (string.IsNullOrEmpty(group.EncodingSettings))
             {
-                Logger.LogDebug($"Plain numeric bitrate: {bitrate}");
-                return bitrate + "k";
+                // Use the same encoding as the incoming stream
+                return $"-i {incomingUrl} -c copy -b:v {bitrate} -f flv {outputUrl}";
             }
-            Logger.LogWarning($"Invalid bitrate format. Defaulting to: {defaultBitrate}");
-            return defaultBitrate;
-        }
-
-        public static string SanitizeResolution(string resolution)
-        {
-            Logger.LogDebug($"Sanitizing Resolution: {resolution}");
-            var resolutionMap = new Dictionary<string, string>()
+            else
             {
-                { "360p", "640x360" },
-                { "480p", "854x480" },
-                { "720p", "1280x720" },
-                { "1080p", "1920x1080" },
-                { "1440p", "2560x1440" },
-                { "4K", "3840x2160" }
-            };
-
-            return resolutionMap.TryGetValue(resolution, out string? sanitizedResolution)
-                ? sanitizedResolution
-                : "1920x1080";
-        }
-
-        public List<string> GetAvailableEncoders()
-        {
-            Logger.LogDebug("Fetching available encoders.");
-            return _ffmpegUtils.GetSupportedCodecs();
-        }
-
-        public async Task StartStream(string obsStreamUrl, List<Tuple<string, string, bool, string, string, string>> outputServices, bool enablePTSGeneration)
-        {
-            if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
-            {
-                Logger.LogWarning("An existing FFmpeg process is running. Stopping it.");
-                await Task.Run(() => _ffmpegProcess.Kill());
-                _ffmpegProcess.Dispose();
-                _ffmpegProcess = null;
+                // Apply custom encoding settings
+                return $"-i {incomingUrl} {group.EncodingSettings} -b:v {bitrate} -f flv {outputUrl}";
             }
+        }
 
-            _ffmpegProcess = new Process
+        private void StartProcess(string ffmpegArgs)
+        {
+            // Start the FFmpeg process with the generated command
+            var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = _ffmpegPath,
+                    FileName = "ffmpeg",
+                    Arguments = ffmpegArgs,
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 }
             };
-
-            var groupedServices = new Dictionary<string, List<Tuple<string, string>>>();
-
-            foreach (var service in outputServices)
-            {
-                string url = SanitizeUrl(service.Item1);
-                string streamKey = SanitizeStreamKey(service.Item2);
-                bool reEncode = service.Item3;
-                string bitrate = SanitizeBitrate(service.Item4);
-                string resolution = SanitizeResolution(service.Item5);
-                string encoder = reEncode ? service.Item6 : "copy";
-
-                if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(streamKey))
-                {
-                    string settingsKey = $"{resolution}_{bitrate}_{reEncode}";
-
-                    if (!groupedServices.TryGetValue(settingsKey, out var serviceList))
-                    {
-                        serviceList = new List<Tuple<string, string>>();
-                        groupedServices[settingsKey] = serviceList;
-                    }
-
-                    serviceList.Add(Tuple.Create(url, streamKey));
-                }
-                else
-                {
-                    Logger.LogError("Invalid URL or Stream Key.");
-                }
-            }
-
-            foreach (var settingsGroup in groupedServices)
-            {
-                string arguments = $"-i {obsStreamUrl} ";
-                if (enablePTSGeneration)
-                {
-                    arguments += "-fflags +genpts ";
-                }
-
-                string[] settingsParts = settingsGroup.Key.Split('_');
-                string resolution = settingsParts[0];
-                string bitrate = settingsParts[1];
-                bool reEncode = bool.Parse(settingsParts[2]);
-                string bufsize = $"{int.Parse(bitrate.TrimEnd('k')) * 3}k";
-
-                string encoder = reEncode ? settingsParts[3] : "copy";
-
-                if (reEncode)
-                {
-                    arguments += $"-c:v {encoder} -b:v {bitrate} -maxrate {bitrate} -bufsize {bufsize} -s {resolution} -c:a aac -vsync cfr ";
-                }
-                else
-                {
-                    arguments += "-c copy ";
-                }
-
-                foreach (var service in settingsGroup.Value)
-                {
-                    arguments += $"-f flv {service.Item1}/{service.Item2} ";
-                }
-
-                _ffmpegProcess.StartInfo.Arguments = arguments.Trim();
-
-                Logger.LogInfo($"Starting FFmpeg process with arguments: {arguments}");
-
-                _ffmpegProcess.OutputDataReceived += (sender, args) =>
-                {
-                    if (args.Data != null)
-                    {
-                        Logger.LogDebug(args.Data);
-                    }
-                };
-
-                _ffmpegProcess.ErrorDataReceived += (sender, args) =>
-                {
-                    if (args.Data != null)
-                    {
-                        Logger.LogError(args.Data);
-                    }
-                };
-
-                await Task.Run(() => _ffmpegProcess.Start());
-                _ffmpegProcess.BeginOutputReadLine();
-                _ffmpegProcess.BeginErrorReadLine();
-            }
-        }
-
-        public async Task StopStream()
-        {
-            if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
-            {
-                Logger.LogInfo("Stopping FFmpeg process.");
-                await Task.Run(() => _ffmpegProcess.Kill());
-                _ffmpegProcess.Dispose();
-                _ffmpegProcess = null;
-            }
-            else
-            {
-                Logger.LogError("Attempted to stop FFmpeg, but no process was running.");
-            }
+            process.Start();
         }
     }
 }
