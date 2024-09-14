@@ -8,16 +8,18 @@ using System.Collections.Generic;
 public class SettingsManager
 {
     private readonly string _password;
-    private readonly string _filePath = "settings.enc"; // Encrypted settings file
+    private readonly string _profileName;
+    private string _filePath => $"settings_{_profileName}.enc"; // Profile-specific settings file
 
-    public SettingsManager(string password)
+    public SettingsManager(string password, string profileName)
     {
         _password = password;
+        _profileName = profileName;
     }
 
+    // Save settings to a file
     public void SaveSettings(AppSettings settings)
     {
-        // Serialize the settings
         var sb = new StringBuilder();
 
         // OBS Stream URL
@@ -30,7 +32,7 @@ public class SettingsManager
         }
         sb.Append("|");
 
-        // Encodings (include the Name field now)
+        // Encodings
         foreach (var encoding in settings.Encodings)
         {
             sb.Append($"{encoding.Name},{encoding.Encoder},{encoding.Resolution},{encoding.Bitrate}|");
@@ -41,65 +43,51 @@ public class SettingsManager
             sb.Append("|");
         }
 
-        // Generate a unique salt for this encryption
         var salt = GenerateSalt();
-
-        // Encrypt the settings using the salt
         var encryptedData = Encrypt(sb.ToString(), _password, salt);
-
-        // Combine salt and encrypted data for storage
         var dataToStore = new byte[salt.Length + encryptedData.Length];
         Buffer.BlockCopy(salt, 0, dataToStore, 0, salt.Length);
         Buffer.BlockCopy(encryptedData, 0, dataToStore, salt.Length, encryptedData.Length);
 
-        // Write to file
         File.WriteAllBytes(_filePath, dataToStore);
     }
 
+    // Load settings from a file
     public AppSettings LoadSettings()
     {
         if (!File.Exists(_filePath))
         {
-            // Provide default values for all required properties
             return new AppSettings
             {
-                ObsStreamUrl = string.Empty,
-                OriginalStreamOutputs = new List<OutputService>
-                {
-                    new OutputService { Url = "rtmp://default-url", StreamKey = string.Empty }
-                },
+                Name = "Default Profile",
+                Encoder = "libx264",
+                Resolution = "1080p",
+                Bitrate = "6000k",
+                OutputServices = new List<OutputService>(),
+                ObsStreamUrl = "rtmp://default-url",
+                OriginalStreamOutputs = new List<OutputService>(),
                 Encodings = new List<EncodingSettings>()
             };
         }
 
-        // Read the stored data
         var dataToLoad = File.ReadAllBytes(_filePath);
-
-        // Extract the salt from the beginning of the file (first 16 bytes)
         var salt = new byte[16];
         Buffer.BlockCopy(dataToLoad, 0, salt, 0, salt.Length);
-
-        // Extract the encrypted data (the rest of the bytes)
         var encryptedData = new byte[dataToLoad.Length - salt.Length];
         Buffer.BlockCopy(dataToLoad, salt.Length, encryptedData, 0, encryptedData.Length);
-
-        // Decrypt the data using the salt and password
         var decryptedData = Decrypt(encryptedData, _password, salt);
 
-        // Deserialize the settings
         var parts = decryptedData.Split('|');
         var obsStreamUrl = parts[0];
 
-        // Deserialize Original Stream Outputs
         var originalOutputs = new List<OutputService>();
         var originalOutputParts = parts[1].Split(';', StringSplitOptions.RemoveEmptyEntries);
         foreach (var outputPart in originalOutputParts)
         {
             var outputParts = outputPart.Split(',');
-            originalOutputs.Add(new OutputService { Url = outputParts[0], StreamKey = outputParts[1] });
+            originalOutputs.Add(new OutputService { Url = outputParts[0], StreamKey = outputParts.Length > 1 ? outputParts[1] : string.Empty });
         }
 
-        // Deserialize Encodings (including the Name field)
         var encodings = new List<EncodingSettings>();
         for (int i = 2; i < parts.Length; i += 2)
         {
@@ -108,7 +96,7 @@ public class SettingsManager
 
             var encoding = new EncodingSettings
             {
-                Name = encodingParts[0], // Name field
+                Name = encodingParts[0],
                 Encoder = encodingParts[1],
                 Resolution = encodingParts[2],
                 Bitrate = encodingParts[3],
@@ -118,7 +106,7 @@ public class SettingsManager
             foreach (var outputPart in outputParts)
             {
                 var outputServiceParts = outputPart.Split(',');
-                encoding.OutputServices.Add(new OutputService { Url = outputServiceParts[0], StreamKey = outputServiceParts[1] });
+                encoding.OutputServices.Add(new OutputService { Url = outputServiceParts[0], StreamKey = outputServiceParts.Length > 1 ? outputServiceParts[1] : string.Empty });
             }
 
             encodings.Add(encoding);
@@ -126,6 +114,11 @@ public class SettingsManager
 
         return new AppSettings
         {
+            Name = "Loaded Profile",
+            Encoder = "libx264",
+            Resolution = "1080p",
+            Bitrate = "6000k",
+            OutputServices = new List<OutputService>(),
             ObsStreamUrl = obsStreamUrl,
             OriginalStreamOutputs = originalOutputs,
             Encodings = encodings
@@ -173,7 +166,7 @@ public class SettingsManager
 
     private byte[] GenerateSalt()
     {
-        var salt = new byte[16]; // 128-bit salt
+        var salt = new byte[16];
         using (var rng = RandomNumberGenerator.Create())
         {
             rng.GetBytes(salt);

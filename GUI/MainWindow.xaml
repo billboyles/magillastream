@@ -15,6 +15,9 @@
         <!-- Column for Add Encoding Button -->
         <StackPanel DockPanel.Dock="Left" Margin="10">
             <Button Content="Add Encoding" Width="150" Height="40" Click="AddEncodingColumn_Click" ToolTip="Click to add a new encoding with its own settings."/>
+            <Button Content="Start" Width="150" Height="40" Click="StartButton_Click" ToolTip="Click to start the stream."/>
+            <Button Content="Stop" Width="150" Height="40" Click="StopButton_Click" ToolTip="Click to stop the stream."/>
+            <Button Content="Save" Width="150" Height="40" Click="SaveButton_Click" ToolTip="Click to save the settings."/>
         </StackPanel>
 
         <!-- Dynamic Encoding Columns -->

@@ -1,43 +1,3 @@
-# Python-related ignores
-
-# Ignore pickle files
-*.pkl
-
-# Ignore Python bytecode files
-*.pyc
-__pycache__/
-*.pyo
-
-# Ignore log files
-*.log
-*.log.*
-
-# Ignore config pickle
-config.pkl
-
-# Ignore files in log dir
-nginx/logs/*
-
-# Ignore generated rtmp config file
-nginx/conf/rtmp.conf
-
-# Ignore files in temp dir
-nginx/temp/*
-
-# Ignore venv config
-pyvenv.cfg
-
-# Ignore virtual environment directories
-venv/
-
-# Ignore build directories
-build/
-
-# Ignore spec files
-*.spec
-
-# C#-related ignores
-
 # Ignore Visual Studio temporary files, build results, and project files
 .vscode/
 bin/
@@ -54,3 +14,12 @@ build/
 
 # Ignore settings file
 *.enc
+
+# Ignore Logs directory
+Logs/
+
+# Ignore log files
+*.log
+
+# Ignore profiles directory
+profiles/

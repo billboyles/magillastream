@@ -13,8 +13,16 @@ namespace Backend.Utilities
 
     public static class Logger
     {
-        private static readonly string LogFilePath = "FFmpegService.log";
+        private static readonly string LogDirectory = "Logs";
         private static LogLevel CurrentLogLevel = LogLevel.Info;
+
+        static Logger()
+        {
+            if (!Directory.Exists(LogDirectory))
+            {
+                Directory.CreateDirectory(LogDirectory);
+            }
+        }
 
         public static void SetLogLevel(LogLevel logLevel)
         {
@@ -27,15 +35,28 @@ namespace Backend.Utilities
             {
                 var logMessage = $"{DateTime.Now}: [{logLevel}] {message}";
                 Console.WriteLine(logMessage);
+
+                string logFilePath = GetLogFilePath(logLevel);
                 try
                 {
-                    File.AppendAllText(LogFilePath, logMessage + Environment.NewLine);
+                    File.AppendAllText(logFilePath, logMessage + Environment.NewLine);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Logging failed: {ex.Message}");
                 }
             }
+        }
+
+        private static string GetLogFilePath(LogLevel logLevel)
+        {
+            return logLevel switch
+            {
+                LogLevel.Error => Path.Combine(LogDirectory, "Error.log"),
+                LogLevel.Warning => Path.Combine(LogDirectory, "Warning.log"),
+                LogLevel.Debug => Path.Combine(LogDirectory, "Debug.log"),
+                _ => Path.Combine(LogDirectory, "Info.log"),
+            };
         }
 
         public static void LogError(string message)
