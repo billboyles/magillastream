@@ -1,19 +1,26 @@
-
 public static class UrlGenerator
 {
-    // Generates the full URL by replacing the stream key
-    public static string GenerateFullUrl(string baseUrl, string streamKey, string Template)
+    // Generates the full URL by replacing the {streamKey} placeholder in the template
+    public static string GenerateFullUrl(string baseUrl, string streamKey, string template)
     {
-        var fullUrl = baseUrl.Replace("{streamKey}", streamKey);
+        // Use the template if provided, otherwise fall back to the base URL
+        var fullUrl = !string.IsNullOrEmpty(template) 
+            ? template.Replace("{streamKey}", streamKey) 
+            : baseUrl.Replace("{streamKey}", streamKey);
 
         return fullUrl;
     }
 
     // Generates the URL with the stream key masked for display purposes
-    public static string GenerateUrlWithMaskedKey(string baseUrl, string streamKey, string Template)
+    public static string GenerateUrlWithMaskedKey(string baseUrl, string streamKey, string template)
     {
+        // Mask the stream key for display
         string maskedKey = new string('*', streamKey.Length);
-        string fullUrl = baseUrl.Replace("{streamKey}", maskedKey);
+
+        // Use the template if provided, otherwise fall back to the base URL
+        var fullUrl = !string.IsNullOrEmpty(template) 
+            ? template.Replace("{streamKey}", maskedKey) 
+            : baseUrl.Replace("{streamKey}", maskedKey);
 
         return fullUrl;
     }

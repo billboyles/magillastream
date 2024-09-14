@@ -1,0 +1,32 @@
+{
+    "ProfileName": "string",
+    "IncomingUrl": "string",
+    "OutputGroups": [
+        {
+            "Name": "string",
+            "ForwardOriginal": true,
+            "OutputUrls": [
+                {
+                    "Url": "string",
+                    "StreamKey": "string",
+                    "UseBackup": true,
+                    "QueryStrings": {
+                        "parameterName": "string"
+                    }
+                }
+            ],
+            "Settings": {
+                "videoEncoder": "string",
+                "encoderPreset": "string",
+                "resolution": "string",
+                "fps": 30,
+                "bitrate": "string",
+                "audioCodec": "string",
+                "audioBitrate": "string"
+            }
+        }
+    ],
+    "GeneratePTS": true,
+    "Theme": "string",
+    "Language": "string"
+}
