@@ -47,5 +47,19 @@ namespace Utilities
 
             return profile;
         }
+
+        // Save an existing profile (overwrite if it already exists)
+        public void SaveProfile(string profileName, Profile profile)
+        {
+            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.enc");
+
+            if (!Directory.Exists(_profileDirectory))
+            {
+                Directory.CreateDirectory(_profileDirectory);
+            }
+
+            // Serialize and overwrite the profile
+            File.WriteAllText(profilePath, JsonSerializer.Serialize(profile));
+        }
     }
 }
