@@ -18,8 +18,8 @@ namespace Backend
                 // Step 1: Create encoding command for this output group
                 string encodingCommand = BuildEncodingCommand(group, profile.IncomingUrl, profile.GeneratePTS);
 
-                // Step 2: Create tee command for output URLs in this group
-                string teeCommand = CreateTeeCommand(group.OutputURLs);
+                // Step 2: Create tee command for output Urls in this group
+                string teeCommand = CreateTeeCommand(group.OutputUrls);
 
                 // Step 3: Combine encoding and tee commands into the final FFmpeg command
                 string finalCommand = encodingCommand + " -f tee " + teeCommand;
@@ -58,15 +58,15 @@ namespace Backend
             return command;
         }
 
-        // Creates the tee command for duplicating output to multiple URLs
-        private string CreateTeeCommand(List<OutputURL> outputURLs)
+        // Creates the tee command for duplicating output to multiple Urls
+        private string CreateTeeCommand(List<OutputUrl> outputUrls)
         {
             List<string> teeOutputs = new();
 
-            // Iterate over each output URL and add to the tee list
-            foreach (var outputURL in outputURLs)
+            // Iterate over each output Url and add to the tee list
+            foreach (var outputUrl in outputUrls)
             {
-                string fullUrl = outputURL.GenerateFullUrl();
+                string fullUrl = outputUrl.GenerateFullUrl();
                 teeOutputs.Add($"[f=flv]{fullUrl}");
             }
 

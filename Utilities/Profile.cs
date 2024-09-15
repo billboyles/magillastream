@@ -3,7 +3,7 @@ namespace Utilities
     public class Profile
     {
         public string ProfileName { get; set; } = string.Empty;   // The name of the profile
-        public string IncomingUrl { get; set; } = string.Empty;   // The URL where the app will listen for an incoming stream
+        public string IncomingUrl { get; set; } = string.Empty;   // The Url where the app will listen for an incoming stream
         public List<OutputGroup> OutputGroups { get; set; } = new List<OutputGroup>();  // 0 or more output groups
         public bool GeneratePTS { get; set; } = false;  // Default to false
         public string Theme { get; set; } = "light";  // Default theme
@@ -23,7 +23,7 @@ namespace Utilities
     {
         public string Name { get; set; } = string.Empty;  // The name of the output group
         public bool ForwardOriginal { get; set; } = false;  // Indicates if the original stream is forwarded without re-encoding
-        public List<OutputURL> OutputURLs { get; set; } = new List<OutputURL>();  // 0 or more output URLs
+        public List<OutputUrl> OutputUrls { get; set; } = new List<OutputUrl>();  // 0 or more output Urls
         public Settings? EncodingSettings { get; set; }  // Encoding settings if not forwarding the original stream
 
         // Validation method to check that either ForwardOriginal is true or EncodingSettings exists
@@ -36,13 +36,13 @@ namespace Utilities
         }
     }
 
-    public class OutputURL
+    public class OutputUrl
     {
-        public string Url { get; set; } = string.Empty;  // The base URL of the ingest server
-        public string StreamKey { get; set; } = string.Empty;  // Stream key specific to this output URL
-        public string Template { get; set; } = string.Empty;  // The URL template for generating the full URL
+        public string Url { get; set; } = string.Empty;  // The base Url of the ingest server
+        public string StreamKey { get; set; } = string.Empty;  // Stream key specific to this output Url
+        public string Template { get; set; } = string.Empty;  // The Url template for generating the full Url
 
-        // Generates the full URL by replacing the stream key in the template or base URL
+        // Generates the full Url by replacing the stream key in the template or base Url
         public string GenerateFullUrl()
             {
                 return !string.IsNullOrEmpty(Template)
@@ -50,7 +50,7 @@ namespace Utilities
                     : Url.Replace("{streamKey}", StreamKey);
             }
 
-        // Generates the URL with the stream key masked for display purposes
+        // Generates the Url with the stream key masked for display purposes
         public string GenerateUrlWithMaskedKey()
             {
                 string maskedKey = new string('*', StreamKey.Length);

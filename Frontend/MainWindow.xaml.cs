@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Utilities;
 using Backend;
+using System.IO;
+using System.Text.Json;
 
 namespace Frontend
 {
@@ -37,8 +39,130 @@ namespace Frontend
             addOutputGroupButton.Click -= AddOutputGroupButton_Click;
             addOutputGroupButton.Click += AddOutputGroupButton_Click;
 
+            saveProfileButton.Click -= SaveProfileButton_Click;
+            saveProfileButton.Click += SaveProfileButton_Click;
+
             // Load profiles into the ComboBox
             LoadProfiles();
+        }
+
+        // Method to load a profile and apply the settings to the GUI
+        private void ApplyProfileToGUI(Profile profile)
+        {
+            // Set the incoming URL and Generate PTS option
+            IncomingUrlTextBox.Text = profile.IncomingUrl;
+            GeneratePTSCheckBox.IsChecked = profile.GeneratePTS;
+
+            // Clear existing output groups in the GUI
+            OutputGroupStack.Children.Clear();
+            outputGroupCount = 1;
+
+            // Load output groups from the profile
+            foreach (var group in profile.OutputGroups)
+            {
+                AddOutputGroupToGUI(group); // This method will populate the fields in the GUI for each output group
+            }
+        }
+
+        // Method to add an output group to the GUI
+        private void AddOutputGroupToGUI(OutputGroup group)
+        {
+            GroupBox newGroup = new GroupBox
+            {
+                Header = $"Output Group {outputGroupCount++}",
+                Style = (Style)FindResource("GroupBoxStyle")
+            };
+
+            StackPanel groupStackPanel = new StackPanel();
+
+            // Create encoding settings panel
+            StackPanel encodingSettingsPanel = new StackPanel
+            {
+                Name = "EncodingSettingsPanel",
+                Visibility = group.ForwardOriginal ? Visibility.Collapsed : Visibility.Visible
+            };
+
+            // Add the encoding settings UI elements
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Video Encoder"));
+            ComboBox videoEncoderComboBox = CreateComboBox(new string[] { "libx264", "libx265" });
+            videoEncoderComboBox.SelectedItem = group.EncodingSettings?.VideoEncoder;
+            encodingSettingsPanel.Children.Add(videoEncoderComboBox);
+
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Resolution"));
+            TextBox resolutionTextBox = CreateTextBox(group.EncodingSettings?.Resolution ?? "1920x1080");
+            encodingSettingsPanel.Children.Add(resolutionTextBox);
+
+            encodingSettingsPanel.Children.Add(CreateTextBlock("FPS"));
+            TextBox fpsTextBox = CreateTextBox(group.EncodingSettings?.Fps.ToString() ?? "30");
+            encodingSettingsPanel.Children.Add(fpsTextBox);
+
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Bitrate (Video)"));
+            TextBox videoBitrateTextBox = CreateTextBox(group.EncodingSettings?.Bitrate ?? "6000k");
+            encodingSettingsPanel.Children.Add(videoBitrateTextBox);
+
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Codec"));
+            ComboBox audioCodecComboBox = CreateComboBox(new string[] { "aac", "mp3" });
+            audioCodecComboBox.SelectedItem = group.EncodingSettings?.AudioCodec;
+            encodingSettingsPanel.Children.Add(audioCodecComboBox);
+
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Bitrate"));
+            TextBox audioBitrateTextBox = CreateTextBox(group.EncodingSettings?.AudioBitrate ?? "192k");
+            encodingSettingsPanel.Children.Add(audioBitrateTextBox);
+
+            // Create Forward Original Stream checkbox
+            CheckBox forwardOriginalCheckBox = new CheckBox
+            {
+                Content = "Forward Original Stream",
+                IsChecked = group.ForwardOriginal,
+                Margin = new Thickness(0, 0, 0, 10),
+                Tag = encodingSettingsPanel // Store a reference to the encoding settings panel in the Tag property
+            };
+            forwardOriginalCheckBox.Checked += ForwardOriginalCheckBox_CheckedChanged;
+            forwardOriginalCheckBox.Unchecked += ForwardOriginalCheckBox_CheckedChanged;
+
+            // Add the elements to the group stack panel
+            groupStackPanel.Children.Add(forwardOriginalCheckBox);
+            groupStackPanel.Children.Add(encodingSettingsPanel);
+
+            // Add a Separator (Horizontal rule)
+            Separator separator = new Separator
+            {
+                Margin = new Thickness(0, 5, 0, 10),
+                Background = Brushes.Gray
+            };
+            groupStackPanel.Children.Add(separator);
+
+            // Add output URLs
+            TextBlock outputUrlsTitle = CreateTextBlock("Output URLs");
+            groupStackPanel.Children.Add(outputUrlsTitle);
+
+            foreach (var outputUrl in group.OutputUrls)
+            {
+                StackPanel urlPanel = new StackPanel
+                {
+                    Orientation = Orientation.Vertical,
+                    Margin = new Thickness(0, 10, 0, 10)
+                };
+
+                urlPanel.Children.Add(CreateTextBlock("Output URL"));
+                TextBox outputUrlTextBox = CreateTextBox(outputUrl.Url);
+                urlPanel.Children.Add(outputUrlTextBox);
+
+                urlPanel.Children.Add(CreateTextBlock("Stream Key"));
+                TextBox streamKeyTextBox = CreateTextBox(outputUrl.StreamKey);
+                urlPanel.Children.Add(streamKeyTextBox);
+
+                urlPanel.Children.Add(CreateTextBlock("Platform Template"));
+                ComboBox platformTemplateComboBox = CreateComboBox(new string[] { "Twitch", "YouTube", "Custom" });
+                platformTemplateComboBox.SelectedItem = outputUrl.Template;
+                urlPanel.Children.Add(platformTemplateComboBox);
+
+                groupStackPanel.Children.Add(urlPanel);
+            }
+
+            // Add the group panel to the GUI
+            newGroup.Content = groupStackPanel;
+            OutputGroupStack.Children.Add(newGroup);
         }
 
         // Event handler for creating a new profile
@@ -71,6 +195,24 @@ namespace Frontend
             catch (Exception ex)
             {
                 MessageBox.Show($"Error creating profile: {ex.Message}");
+            }
+        }
+
+        private void SaveProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Parse the GUI into a Profile object
+                var profile = ParseGUIToProfile();
+
+                // Save the profile using the ProfileManager
+                _profileManager.SaveProfile(profile.ProfileName, profile);
+                MessageBox.Show("Profile saved successfully!");
+            }
+            catch (Exception ex)
+            {
+                // Show an error message if something goes wrong
+                MessageBox.Show($"Error saving profile: {ex.Message}");
             }
         }
 
@@ -121,18 +263,16 @@ namespace Frontend
                 Tag = encodingSettingsPanel // Store a reference to the encoding settings panel in the Tag property
             };
 
-            // Attach the event handler
             forwardOriginalCheckBox.Checked += ForwardOriginalCheckBox_CheckedChanged;
             forwardOriginalCheckBox.Unchecked += ForwardOriginalCheckBox_CheckedChanged;
 
-            // Add elements to the group stack panel
             groupStackPanel.Children.Add(forwardOriginalCheckBox);
             groupStackPanel.Children.Add(encodingSettingsPanel);
 
             // Add a Separator (Horizontal rule)
             Separator separator = new Separator
             {
-                Margin = new Thickness(0, 5, 0, 10), // Adjust margin for separator
+                Margin = new Thickness(0, 5, 0, 10),
                 Background = Brushes.Gray
             };
             groupStackPanel.Children.Add(separator);
@@ -142,7 +282,7 @@ namespace Frontend
             outputUrlsTitle.Margin = new Thickness(0, 10, 0, 5); // Adjust margin for title
             groupStackPanel.Children.Add(outputUrlsTitle);
 
-            // Add Output URL button
+            // Add Output Url button
             Button addOutputUrlButton = new Button
             {
                 Style = (Style)FindResource("AddButtonStyle"),
@@ -156,7 +296,7 @@ namespace Frontend
             OutputGroupStack.Children.Add(newGroup);
         }
 
-        // Event handler for adding a new Output URL dynamically
+        // Event handler for adding a new Output Url dynamically
         private void AddOutputUrlButton_Click(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
@@ -242,7 +382,7 @@ namespace Frontend
         private void LoadProfiles()
         {
             ProfileComboBox.Items.Clear();
-            string[] profileFiles = System.IO.Directory.GetFiles("profiles", "*.enc");
+            string[] profileFiles = System.IO.Directory.GetFiles("profiles", "*.json");
 
             foreach (string profileFile in profileFiles)
             {
@@ -293,6 +433,59 @@ namespace Frontend
             {
                 MessageBox.Show($"Error stopping stream: {ex.Message}");
             }
+        }
+
+        private Profile ParseGUIToProfile()
+        {
+            Profile profile = new Profile
+            {
+                IncomingUrl = IncomingUrlTextBox.Text,
+                GeneratePTS = GeneratePTSCheckBox.IsChecked == true,
+                OutputGroups = new List<OutputGroup>()
+            };
+
+            foreach (GroupBox groupBox in OutputGroupStack.Children)
+            {
+                StackPanel groupStack = groupBox.Content as StackPanel;
+                if (groupStack != null)
+                {
+                    OutputGroup outputGroup = new OutputGroup
+                    {
+                        EncodingSettings = new Settings(),
+                        OutputUrls = new List<OutputUrl>(),
+                        ForwardOriginal = (groupStack.Children[0] as CheckBox)?.IsChecked == true
+                    };
+
+                    StackPanel encodingSettingsPanel = groupStack.FindName("EncodingSettingsPanel") as StackPanel;
+                    if (encodingSettingsPanel != null)
+                    {
+                        outputGroup.EncodingSettings.VideoEncoder = (encodingSettingsPanel.Children[1] as ComboBox)?.SelectedItem?.ToString();
+                        outputGroup.EncodingSettings.Resolution = (encodingSettingsPanel.Children[3] as TextBox)?.Text;
+                        outputGroup.EncodingSettings.Fps = int.TryParse((encodingSettingsPanel.Children[5] as TextBox)?.Text, out int fpsValue) ? fpsValue : 30;
+                        outputGroup.EncodingSettings.Bitrate = (encodingSettingsPanel.Children[7] as TextBox)?.Text;
+                        outputGroup.EncodingSettings.AudioCodec = (encodingSettingsPanel.Children[9] as ComboBox)?.SelectedItem?.ToString();
+                        outputGroup.EncodingSettings.AudioBitrate = (encodingSettingsPanel.Children[11] as TextBox)?.Text;
+                    }
+
+                    for (int i = 2; i < groupStack.Children.Count; i++)
+                    {
+                        if (groupStack.Children[i] is StackPanel urlPanel && urlPanel.Children.Count >= 6)
+                        {
+                            OutputUrl outputUrl = new OutputUrl
+                            {
+                                Url = (urlPanel.Children[1] as TextBox)?.Text,
+                                StreamKey = (urlPanel.Children[3] as TextBox)?.Text,
+                                Template = (urlPanel.Children[5] as ComboBox)?.SelectedItem?.ToString()
+                            };
+                            outputGroup.OutputUrls.Add(outputUrl);
+                        }
+                    }
+
+                    profile.OutputGroups.Add(outputGroup);
+                }
+            }
+
+            return profile;
         }
     }
 }

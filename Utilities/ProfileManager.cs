@@ -15,7 +15,7 @@ namespace Utilities
                 Directory.CreateDirectory(_profileDirectory);
             }
 
-            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.enc");
+            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
 
             if (File.Exists(profilePath))
             {
@@ -29,7 +29,7 @@ namespace Utilities
         // Load an existing profile
         public Profile LoadProfile(string profileName)
         {
-            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.enc");
+            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
 
             if (!File.Exists(profilePath))
             {
@@ -51,7 +51,7 @@ namespace Utilities
         // Save an existing profile (overwrite if it already exists)
         public void SaveProfile(string profileName, Profile profile)
         {
-            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.enc");
+            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
 
             if (!Directory.Exists(_profileDirectory))
             {

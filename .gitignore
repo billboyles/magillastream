@@ -12,9 +12,6 @@ packages/
 # Ignore build directories
 build/
 
-# Ignore settings file
-*.enc
-
 # Ignore Logs directory
 Logs/
 

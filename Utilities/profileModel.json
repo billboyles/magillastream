@@ -9,10 +9,7 @@
                 {
                     "Url": "string",
                     "StreamKey": "string",
-                    "UseBackup": true,
-                    "QueryStrings": {
-                        "parameterName": "string"
-                    }
+                    "Template": "string"
                 }
             ],
             "Settings": {

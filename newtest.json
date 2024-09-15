@@ -1,0 +1,49 @@
+{
+    "ProfileName": "",
+    "IncomingUrl": "rtmp://127.0.0.1:1935/live",
+    "OutputGroups": [
+        {
+            "Name": "",
+            "ForwardOriginal": true,
+            "OutputUrls": [
+                {
+                    "Url": "rtmp://a.youtube.com",
+                    "StreamKey": "abcdef1234567890",
+                    "Template": "System.Windows.Controls.ComboBoxItem: YouTube"
+                }
+            ],
+            "EncodingSettings": {
+                "VideoEncoder": "libx264",
+                "EncoderPreset": "medium",
+                "Resolution": "1920x1080",
+                "Fps": 30,
+                "Bitrate": "6000k",
+                "AudioCodec": "aac",
+                "AudioBitrate": "192k"
+            }
+        },
+        {
+            "Name": "",
+            "ForwardOriginal": false,
+            "OutputUrls": [
+                {
+                    "Url": "rtmp://twitch.com",
+                    "StreamKey": "09876543210fedcba",
+                    "Template": "System.Windows.Controls.ComboBoxItem: Twitch"
+                }
+            ],
+            "EncodingSettings": {
+                "VideoEncoder": "libx264",
+                "EncoderPreset": "medium",
+                "Resolution": "1920x1080",
+                "Fps": 30,
+                "Bitrate": "6000k",
+                "AudioCodec": "aac",
+                "AudioBitrate": "192k"
+            }
+        }
+    ],
+    "GeneratePTS": true,
+    "Theme": "light",
+    "Language": "en-US"
+}
