@@ -61,5 +61,24 @@ namespace Utilities
             // Serialize and overwrite the profile
             File.WriteAllText(profilePath, JsonSerializer.Serialize(profile));
         }
+
+        public List<string> GetProfilesList()
+        {
+            if (!Directory.Exists(_profileDirectory))
+            {
+                Directory.CreateDirectory(_profileDirectory);
+            }
+
+            string[] profileFiles = Directory.GetFiles(_profileDirectory, "*.json");
+            List<string> profileNames = new List<string>();
+
+            foreach (string profileFile in profileFiles)
+            {
+                string profileName = Path.GetFileNameWithoutExtension(profileFile);
+                profileNames.Add(profileName);
+            }
+
+            return profileNames;
+        }
     }
 }

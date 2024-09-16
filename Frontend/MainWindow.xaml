@@ -61,9 +61,13 @@
         <!-- Left Panel -->
         <StackPanel Grid.Column="0">
             <TextBlock Text="Profile" Style="{StaticResource HeaderTextStyle}" />
-            <ComboBox Name="ProfileComboBox" />
-
-            <Button Name="createProfileButton" Content="Create Profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,10" />
+            
+            <!-- Removed ComboBox for Profile Selection -->
+            
+            <StackPanel Orientation="Horizontal">
+                <Button Name="createProfileButton" Content="Create Profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,5,10" />
+                <Button Name="loadProfileButton" Content="Load Profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,10" />
+            </StackPanel>
 
             <TextBlock Text="Input URL" Style="{StaticResource HeaderTextStyle}" />
             <TextBox Name="IncomingUrlTextBox" />

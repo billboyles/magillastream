@@ -1,11 +1,43 @@
 using System;
+using System.IO;
+using System.Text.Json;
 
 public class AppSettings
 {
-    public string Theme { get; set; } = "light";   // Can be "light" or "dark"
-    public bool GeneratePTS { get; set; } = false; // Whether to enable PTS generation
-    public string LastUsedProfile { get; set; } = "";  // Store the last profile used
+    public string LastUsedProfile { get; set; } = ""; 
 
-    // Additional settings as required
-    public string Language { get; set; } = "en-US";  // Default language for localization
+    private static readonly string SettingsFile = "appsettings.json";
+
+    // Save the current settings to a file
+    public void Save()
+    {
+        try
+        {
+            var settingsJson = JsonSerializer.Serialize(this);
+            File.WriteAllText(SettingsFile, settingsJson);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving settings: {ex.Message}");
+        }
+    }
+
+    // Load the settings from a file, return default if no file is found
+    public static AppSettings Load()
+    {
+        try
+        {
+            if (File.Exists(SettingsFile))
+            {
+                var settingsJson = File.ReadAllText(SettingsFile);
+                return JsonSerializer.Deserialize<AppSettings>(settingsJson) ?? new AppSettings();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading settings: {ex.Message}");
+        }
+
+        return new AppSettings(); // Return default settings if no file is found or if there's an error
+    }
 }

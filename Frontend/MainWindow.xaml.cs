@@ -6,7 +6,6 @@ using System.Windows.Media;
 using Utilities;
 using Backend;
 using System.IO;
-using System.Text.Json;
 
 namespace Frontend
 {
@@ -14,21 +13,50 @@ namespace Frontend
     {
         private ProfileManager _profileManager;
         private FFmpegService _ffmpegService;
+        private AppSettings _appSettings;
+        
         private int outputGroupCount = 1; // Track how many output groups are present
+
+        // List to hold references to OutputGroupControls
+        private List<OutputGroupControls> outputGroupControlsList = new List<OutputGroupControls>();
 
         public MainWindow()
         {
             InitializeComponent();
             _profileManager = new ProfileManager();
             _ffmpegService = new FFmpegService();
+            _appSettings = new AppSettings();
+
+            // Load AppSettings
+            _appSettings = AppSettings.Load();
+
+            // Load last used profile if it exists
+            if (!string.IsNullOrEmpty(_appSettings.LastUsedProfile))
+            {
+                try
+                {
+                    Profile lastProfile = _profileManager.LoadProfile(_appSettings.LastUsedProfile);
+                    ApplyProfileToGUI(lastProfile);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading last used profile: {ex.Message}");
+                }
+            }
 
             // Set maximum window size based on screen size
             this.MaxWidth = SystemParameters.WorkArea.Width;
             this.MaxHeight = SystemParameters.WorkArea.Height;
 
-            // Attach event handlers only once
+            // Attach event handlers
             createProfileButton.Click -= CreateProfileButton_Click;
             createProfileButton.Click += CreateProfileButton_Click;
+
+            saveProfileButton.Click -= SaveProfileButton_Click;
+            saveProfileButton.Click += SaveProfileButton_Click;
+
+            loadProfileButton.Click -= LoadProfileButton_Click;
+            loadProfileButton.Click += LoadProfileButton_Click;
 
             startStreamButton.Click -= StartStreamButton_Click;
             startStreamButton.Click += StartStreamButton_Click;
@@ -38,12 +66,14 @@ namespace Frontend
 
             addOutputGroupButton.Click -= AddOutputGroupButton_Click;
             addOutputGroupButton.Click += AddOutputGroupButton_Click;
+        }
 
-            saveProfileButton.Click -= SaveProfileButton_Click;
-            saveProfileButton.Click += SaveProfileButton_Click;
+        // Save the settings when closing the app
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            base.OnClosing(e);
 
-            // Load profiles into the ComboBox
-            LoadProfiles();
+            _appSettings.Save(); // Save the settings when closing the app
         }
 
         // Method to load a profile and apply the settings to the GUI
@@ -53,8 +83,9 @@ namespace Frontend
             IncomingUrlTextBox.Text = profile.IncomingUrl;
             GeneratePTSCheckBox.IsChecked = profile.GeneratePTS;
 
-            // Clear existing output groups in the GUI
+            // Clear existing output groups in the GUI and control list
             OutputGroupStack.Children.Clear();
+            outputGroupControlsList.Clear();
             outputGroupCount = 1;
 
             // Load output groups from the profile
@@ -78,35 +109,32 @@ namespace Frontend
             // Create encoding settings panel
             StackPanel encodingSettingsPanel = new StackPanel
             {
-                Name = "EncodingSettingsPanel",
                 Visibility = group.ForwardOriginal ? Visibility.Collapsed : Visibility.Visible
             };
 
-            // Add the encoding settings UI elements
-            encodingSettingsPanel.Children.Add(CreateTextBlock("Video Encoder"));
+            // Create and store references to controls
             ComboBox videoEncoderComboBox = CreateComboBox(new string[] { "libx264", "libx265" });
-            videoEncoderComboBox.SelectedItem = group.EncodingSettings?.VideoEncoder;
-            encodingSettingsPanel.Children.Add(videoEncoderComboBox);
+            videoEncoderComboBox.SelectedItem = GetComboBoxItemByContent(videoEncoderComboBox, group.EncodingSettings?.VideoEncoder);
 
-            encodingSettingsPanel.Children.Add(CreateTextBlock("Resolution"));
             TextBox resolutionTextBox = CreateTextBox(group.EncodingSettings?.Resolution ?? "1920x1080");
-            encodingSettingsPanel.Children.Add(resolutionTextBox);
-
-            encodingSettingsPanel.Children.Add(CreateTextBlock("FPS"));
             TextBox fpsTextBox = CreateTextBox(group.EncodingSettings?.Fps.ToString() ?? "30");
-            encodingSettingsPanel.Children.Add(fpsTextBox);
-
-            encodingSettingsPanel.Children.Add(CreateTextBlock("Bitrate (Video)"));
             TextBox videoBitrateTextBox = CreateTextBox(group.EncodingSettings?.Bitrate ?? "6000k");
-            encodingSettingsPanel.Children.Add(videoBitrateTextBox);
-
-            encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Codec"));
             ComboBox audioCodecComboBox = CreateComboBox(new string[] { "aac", "mp3" });
-            audioCodecComboBox.SelectedItem = group.EncodingSettings?.AudioCodec;
-            encodingSettingsPanel.Children.Add(audioCodecComboBox);
-
-            encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Bitrate"));
+            audioCodecComboBox.SelectedItem = GetComboBoxItemByContent(audioCodecComboBox, group.EncodingSettings?.AudioCodec);
             TextBox audioBitrateTextBox = CreateTextBox(group.EncodingSettings?.AudioBitrate ?? "192k");
+
+            // Add controls to encoding settings panel
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Video Encoder"));
+            encodingSettingsPanel.Children.Add(videoEncoderComboBox);
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Resolution"));
+            encodingSettingsPanel.Children.Add(resolutionTextBox);
+            encodingSettingsPanel.Children.Add(CreateTextBlock("FPS"));
+            encodingSettingsPanel.Children.Add(fpsTextBox);
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Bitrate (Video)"));
+            encodingSettingsPanel.Children.Add(videoBitrateTextBox);
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Codec"));
+            encodingSettingsPanel.Children.Add(audioCodecComboBox);
+            encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Bitrate"));
             encodingSettingsPanel.Children.Add(audioBitrateTextBox);
 
             // Create Forward Original Stream checkbox
@@ -115,12 +143,11 @@ namespace Frontend
                 Content = "Forward Original Stream",
                 IsChecked = group.ForwardOriginal,
                 Margin = new Thickness(0, 0, 0, 10),
-                Tag = encodingSettingsPanel // Store a reference to the encoding settings panel in the Tag property
+                Tag = encodingSettingsPanel
             };
             forwardOriginalCheckBox.Checked += ForwardOriginalCheckBox_CheckedChanged;
             forwardOriginalCheckBox.Unchecked += ForwardOriginalCheckBox_CheckedChanged;
 
-            // Add the elements to the group stack panel
             groupStackPanel.Children.Add(forwardOriginalCheckBox);
             groupStackPanel.Children.Add(encodingSettingsPanel);
 
@@ -132,9 +159,25 @@ namespace Frontend
             };
             groupStackPanel.Children.Add(separator);
 
-            // Add output URLs
+            // Add Output URLs section title
             TextBlock outputUrlsTitle = CreateTextBlock("Output URLs");
+            outputUrlsTitle.Margin = new Thickness(0, 10, 0, 5); // Adjust margin for title
             groupStackPanel.Children.Add(outputUrlsTitle);
+
+            // Create OutputGroupControls and store references
+            var outputGroupControls = new OutputGroupControls
+            {
+                GroupBox = newGroup,
+                ForwardOriginalCheckBox = forwardOriginalCheckBox,
+                EncodingSettingsPanel = encodingSettingsPanel,
+                VideoEncoderComboBox = videoEncoderComboBox,
+                ResolutionTextBox = resolutionTextBox,
+                FpsTextBox = fpsTextBox,
+                VideoBitrateTextBox = videoBitrateTextBox,
+                AudioCodecComboBox = audioCodecComboBox,
+                AudioBitrateTextBox = audioBitrateTextBox,
+                OutputUrlControlsList = new List<OutputUrlControls>()
+            };
 
             foreach (var outputUrl in group.OutputUrls)
             {
@@ -144,25 +187,57 @@ namespace Frontend
                     Margin = new Thickness(0, 10, 0, 10)
                 };
 
-                urlPanel.Children.Add(CreateTextBlock("Output URL"));
                 TextBox outputUrlTextBox = CreateTextBox(outputUrl.Url);
-                urlPanel.Children.Add(outputUrlTextBox);
-
-                urlPanel.Children.Add(CreateTextBlock("Stream Key"));
                 TextBox streamKeyTextBox = CreateTextBox(outputUrl.StreamKey);
-                urlPanel.Children.Add(streamKeyTextBox);
-
-                urlPanel.Children.Add(CreateTextBlock("Platform Template"));
                 ComboBox platformTemplateComboBox = CreateComboBox(new string[] { "Twitch", "YouTube", "Custom" });
-                platformTemplateComboBox.SelectedItem = outputUrl.Template;
+                platformTemplateComboBox.SelectedItem = GetComboBoxItemByContent(platformTemplateComboBox, outputUrl.Template);
+
+                urlPanel.Children.Add(CreateTextBlock("Output URL"));
+                urlPanel.Children.Add(outputUrlTextBox);
+                urlPanel.Children.Add(CreateTextBlock("Stream Key"));
+                urlPanel.Children.Add(streamKeyTextBox);
+                urlPanel.Children.Add(CreateTextBlock("Platform Template"));
                 urlPanel.Children.Add(platformTemplateComboBox);
 
                 groupStackPanel.Children.Add(urlPanel);
+
+                var outputUrlControls = new OutputUrlControls
+                {
+                    OutputUrlTextBox = outputUrlTextBox,
+                    StreamKeyTextBox = streamKeyTextBox,
+                    PlatformTemplateComboBox = platformTemplateComboBox
+                };
+
+                outputGroupControls.OutputUrlControlsList.Add(outputUrlControls);
             }
 
-            // Add the group panel to the GUI
+            // Add Output Url button
+            Button addOutputUrlButton = new Button
+            {
+                Style = (Style)FindResource("AddButtonStyle"),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            addOutputUrlButton.Click += AddOutputUrlButton_Click;
+
+            groupStackPanel.Children.Add(addOutputUrlButton);
+
             newGroup.Content = groupStackPanel;
             OutputGroupStack.Children.Add(newGroup);
+
+            outputGroupControlsList.Add(outputGroupControls);
+        }
+
+        // Helper method to select ComboBoxItem by content
+        private ComboBoxItem GetComboBoxItemByContent(ComboBox comboBox, string content)
+        {
+            foreach (ComboBoxItem item in comboBox.Items)
+            {
+                if (item.Content.ToString() == content)
+                {
+                    return item;
+                }
+            }
+            return null;
         }
 
         // Event handler for creating a new profile
@@ -190,7 +265,6 @@ namespace Frontend
             {
                 _profileManager.CreateProfile(profileName, profile);
                 MessageBox.Show("Profile created successfully!");
-                LoadProfiles();
             }
             catch (Exception ex)
             {
@@ -205,10 +279,22 @@ namespace Frontend
                 // Parse the GUI into a Profile object
                 var profile = ParseGUIToProfile();
 
-                // Save the profile using the ProfileManager
-                _profileManager.SaveProfile(profile.ProfileName, profile);
-                MessageBox.Show("Profile saved successfully!");
+                if (string.IsNullOrEmpty(_appSettings.LastUsedProfile))
+                {
+                    MessageBox.Show("No profile is loaded. Please load or create a profile before saving.");
+                    return;
+                }
+
+                else
+                {
+                    profile.ProfileName = _appSettings.LastUsedProfile;
+
+                    // Save the profile using the ProfileManager
+                    _profileManager.SaveProfile(profile.ProfileName, profile);
+                    MessageBox.Show("Profile saved successfully!");
+                }
             }
+            
             catch (Exception ex)
             {
                 // Show an error message if something goes wrong
@@ -216,14 +302,42 @@ namespace Frontend
             }
         }
 
+        // Event handler for loading a profile
+        private void LoadProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the list of profiles from ProfileManager
+            List<string> profiles = _profileManager.GetProfilesList();
+
+            // Open the custom profile selection dialog
+            ProfileSelectionDialog profileDialog = new ProfileSelectionDialog(profiles);
+            
+            if (profileDialog.ShowDialog() == true)
+            {
+                // Load the selected profile
+                string selectedProfile = profileDialog.SelectedProfile;
+
+                try
+                {
+                    Profile loadedProfile = _profileManager.LoadProfile(selectedProfile);
+                    ApplyProfileToGUI(loadedProfile);
+
+                    // Update the last opened profile
+                    _appSettings.LastUsedProfile = selectedProfile;
+                    _appSettings.Save();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading profile: {ex.Message}");
+                }
+            }
+        }
+
         // Event handler for adding a new Output Group dynamically
         private void AddOutputGroupButton_Click(object sender, RoutedEventArgs e)
         {
-            outputGroupCount++;
-
             GroupBox newGroup = new GroupBox
             {
-                Header = $"Output Group {outputGroupCount}",
+                Header = $"Output Group {outputGroupCount++}",
                 Style = (Style)FindResource("GroupBoxStyle")
             };
 
@@ -232,28 +346,30 @@ namespace Frontend
             // Create encoding settings panel
             StackPanel encodingSettingsPanel = new StackPanel
             {
-                Name = "EncodingSettingsPanel",
                 Visibility = Visibility.Visible
             };
 
-            // Add the encoding settings UI elements
+            // Create and store references to controls
+            ComboBox videoEncoderComboBox = CreateComboBox(new string[] { "libx264", "libx265" });
+            TextBox resolutionTextBox = CreateTextBox("1920x1080");
+            TextBox fpsTextBox = CreateTextBox("30");
+            TextBox videoBitrateTextBox = CreateTextBox("6000k");
+            ComboBox audioCodecComboBox = CreateComboBox(new string[] { "aac", "mp3" });
+            TextBox audioBitrateTextBox = CreateTextBox("192k");
+
+            // Add controls to encoding settings panel
             encodingSettingsPanel.Children.Add(CreateTextBlock("Video Encoder"));
-            encodingSettingsPanel.Children.Add(CreateComboBox(new string[] { "libx264", "libx265" }));
-
+            encodingSettingsPanel.Children.Add(videoEncoderComboBox);
             encodingSettingsPanel.Children.Add(CreateTextBlock("Resolution"));
-            encodingSettingsPanel.Children.Add(CreateTextBox("1920x1080"));
-
+            encodingSettingsPanel.Children.Add(resolutionTextBox);
             encodingSettingsPanel.Children.Add(CreateTextBlock("FPS"));
-            encodingSettingsPanel.Children.Add(CreateTextBox("30"));
-
+            encodingSettingsPanel.Children.Add(fpsTextBox);
             encodingSettingsPanel.Children.Add(CreateTextBlock("Bitrate (Video)"));
-            encodingSettingsPanel.Children.Add(CreateTextBox("6000k"));
-
+            encodingSettingsPanel.Children.Add(videoBitrateTextBox);
             encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Codec"));
-            encodingSettingsPanel.Children.Add(CreateComboBox(new string[] { "aac", "mp3" }));
-
+            encodingSettingsPanel.Children.Add(audioCodecComboBox);
             encodingSettingsPanel.Children.Add(CreateTextBlock("Audio Bitrate"));
-            encodingSettingsPanel.Children.Add(CreateTextBox("192k"));
+            encodingSettingsPanel.Children.Add(audioBitrateTextBox);
 
             // Create Forward Original Stream checkbox and assign the encoding panel to its Tag
             CheckBox forwardOriginalCheckBox = new CheckBox
@@ -294,6 +410,23 @@ namespace Frontend
 
             newGroup.Content = groupStackPanel;
             OutputGroupStack.Children.Add(newGroup);
+
+            // Create OutputGroupControls and store references
+            var outputGroupControls = new OutputGroupControls
+            {
+                GroupBox = newGroup,
+                ForwardOriginalCheckBox = forwardOriginalCheckBox,
+                EncodingSettingsPanel = encodingSettingsPanel,
+                VideoEncoderComboBox = videoEncoderComboBox,
+                ResolutionTextBox = resolutionTextBox,
+                FpsTextBox = fpsTextBox,
+                VideoBitrateTextBox = videoBitrateTextBox,
+                AudioCodecComboBox = audioCodecComboBox,
+                AudioBitrateTextBox = audioBitrateTextBox,
+                OutputUrlControlsList = new List<OutputUrlControls>()
+            };
+
+            outputGroupControlsList.Add(outputGroupControls);
         }
 
         // Event handler for adding a new Output Url dynamically
@@ -308,16 +441,35 @@ namespace Frontend
                 Margin = new Thickness(0, 10, 0, 10)
             };
 
+            TextBox outputUrlTextBox = CreateTextBox("rtmp://your-url");
+            TextBox streamKeyTextBox = CreateTextBox("Your Stream Key");
+            ComboBox platformTemplateComboBox = CreateComboBox(new string[] { "Twitch", "YouTube", "Custom" });
+
             urlPanel.Children.Add(CreateTextBlock("Output URL"));
-            urlPanel.Children.Add(CreateTextBox("rtmp://your-url"));
-
+            urlPanel.Children.Add(outputUrlTextBox);
             urlPanel.Children.Add(CreateTextBlock("Stream Key"));
-            urlPanel.Children.Add(CreateTextBox("Your Stream Key"));
-
+            urlPanel.Children.Add(streamKeyTextBox);
             urlPanel.Children.Add(CreateTextBlock("Platform Template"));
-            urlPanel.Children.Add(CreateComboBox(new string[] { "Twitch", "YouTube", "Custom" }));
+            urlPanel.Children.Add(platformTemplateComboBox);
 
-            groupPanel?.Children.Insert(groupPanel.Children.Count - 1, urlPanel);
+            // Insert urlPanel before the Add Output Url button
+            int insertIndex = groupPanel.Children.IndexOf(button);
+            groupPanel.Children.Insert(insertIndex, urlPanel);
+
+            // Find the corresponding OutputGroupControls
+            var outputGroupControls = outputGroupControlsList.Find(ogc => ogc.GroupBox.Content == groupPanel);
+
+            if (outputGroupControls != null)
+            {
+                var outputUrlControls = new OutputUrlControls
+                {
+                    OutputUrlTextBox = outputUrlTextBox,
+                    StreamKeyTextBox = streamKeyTextBox,
+                    PlatformTemplateComboBox = platformTemplateComboBox
+                };
+
+                outputGroupControls.OutputUrlControlsList.Add(outputUrlControls);
+            }
         }
 
         // Toggle the visibility of encoding settings based on the ForwardOriginal checkbox
@@ -378,40 +530,16 @@ namespace Frontend
             return comboBox;
         }
 
-        // Load profiles into the ComboBox
-        private void LoadProfiles()
-        {
-            ProfileComboBox.Items.Clear();
-            string[] profileFiles = System.IO.Directory.GetFiles("profiles", "*.json");
-
-            foreach (string profileFile in profileFiles)
-            {
-                string profileName = System.IO.Path.GetFileNameWithoutExtension(profileFile);
-                ProfileComboBox.Items.Add(profileName);
-            }
-
-            if (ProfileComboBox.Items.Count > 0)
-            {
-                ProfileComboBox.SelectedIndex = 0;
-            }
-        }
-
         // Event handler for starting the stream
         private void StartStreamButton_Click(object sender, RoutedEventArgs e)
         {
-            string? selectedProfile = ProfileComboBox.SelectedItem?.ToString();
-
-            if (string.IsNullOrEmpty(selectedProfile))
-            {
-                MessageBox.Show("Please select a valid profile to start streaming.");
-                return;
-            }
+            // Parse the GUI into a Profile object
+            var profile = ParseGUIToProfile();
 
             try
             {
-                Profile profile = _profileManager.LoadProfile(selectedProfile);
                 _ffmpegService.StartFFmpegProcess(profile);
-                MessageBox.Show($"Streaming started with profile {selectedProfile}");
+                MessageBox.Show($"Streaming started.");
             }
             catch (Exception ex)
             {
@@ -444,45 +572,39 @@ namespace Frontend
                 OutputGroups = new List<OutputGroup>()
             };
 
-            foreach (GroupBox groupBox in OutputGroupStack.Children)
+            foreach (var ogControls in outputGroupControlsList)
             {
-                StackPanel groupStack = groupBox.Content as StackPanel;
-                if (groupStack != null)
+                OutputGroup outputGroup = new OutputGroup
                 {
-                    OutputGroup outputGroup = new OutputGroup
+                    ForwardOriginal = ogControls.ForwardOriginalCheckBox.IsChecked == true,
+                    OutputUrls = new List<OutputUrl>()
+                };
+
+                if (!outputGroup.ForwardOriginal)
+                {
+                    outputGroup.EncodingSettings = new Settings
                     {
-                        EncodingSettings = new Settings(),
-                        OutputUrls = new List<OutputUrl>(),
-                        ForwardOriginal = (groupStack.Children[0] as CheckBox)?.IsChecked == true
+                        VideoEncoder = (ogControls.VideoEncoderComboBox.SelectedItem as ComboBoxItem)?.Content.ToString(),
+                        Resolution = ogControls.ResolutionTextBox.Text,
+                        Fps = int.TryParse(ogControls.FpsTextBox.Text, out int fpsValue) ? fpsValue : 30,
+                        Bitrate = ogControls.VideoBitrateTextBox.Text,
+                        AudioCodec = (ogControls.AudioCodecComboBox.SelectedItem as ComboBoxItem)?.Content.ToString(),
+                        AudioBitrate = ogControls.AudioBitrateTextBox.Text
                     };
-
-                    StackPanel encodingSettingsPanel = groupStack.FindName("EncodingSettingsPanel") as StackPanel;
-                    if (encodingSettingsPanel != null)
-                    {
-                        outputGroup.EncodingSettings.VideoEncoder = (encodingSettingsPanel.Children[1] as ComboBox)?.SelectedItem?.ToString();
-                        outputGroup.EncodingSettings.Resolution = (encodingSettingsPanel.Children[3] as TextBox)?.Text;
-                        outputGroup.EncodingSettings.Fps = int.TryParse((encodingSettingsPanel.Children[5] as TextBox)?.Text, out int fpsValue) ? fpsValue : 30;
-                        outputGroup.EncodingSettings.Bitrate = (encodingSettingsPanel.Children[7] as TextBox)?.Text;
-                        outputGroup.EncodingSettings.AudioCodec = (encodingSettingsPanel.Children[9] as ComboBox)?.SelectedItem?.ToString();
-                        outputGroup.EncodingSettings.AudioBitrate = (encodingSettingsPanel.Children[11] as TextBox)?.Text;
-                    }
-
-                    for (int i = 2; i < groupStack.Children.Count; i++)
-                    {
-                        if (groupStack.Children[i] is StackPanel urlPanel && urlPanel.Children.Count >= 6)
-                        {
-                            OutputUrl outputUrl = new OutputUrl
-                            {
-                                Url = (urlPanel.Children[1] as TextBox)?.Text,
-                                StreamKey = (urlPanel.Children[3] as TextBox)?.Text,
-                                Template = (urlPanel.Children[5] as ComboBox)?.SelectedItem?.ToString()
-                            };
-                            outputGroup.OutputUrls.Add(outputUrl);
-                        }
-                    }
-
-                    profile.OutputGroups.Add(outputGroup);
                 }
+
+                foreach (var urlControls in ogControls.OutputUrlControlsList)
+                {
+                    OutputUrl outputUrl = new OutputUrl
+                    {
+                        Url = urlControls.OutputUrlTextBox.Text,
+                        StreamKey = urlControls.StreamKeyTextBox.Text,
+                        Template = (urlControls.PlatformTemplateComboBox.SelectedItem as ComboBoxItem)?.Content.ToString()
+                    };
+                    outputGroup.OutputUrls.Add(outputUrl);
+                }
+
+                profile.OutputGroups.Add(outputGroup);
             }
 
             return profile;
