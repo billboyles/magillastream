@@ -20,3 +20,6 @@ Logs/
 
 # Ignore profiles directory
 profiles/
+
+# Ignore AppSettings files
+appsettings.json
