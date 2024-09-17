@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace Frontend;
+namespace magillastream;
 
 /// <summary>
 /// Interaction logic for App.xaml
