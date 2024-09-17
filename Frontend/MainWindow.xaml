@@ -62,12 +62,24 @@
         <StackPanel Grid.Column="0">
             <TextBlock Text="Profile" Style="{StaticResource HeaderTextStyle}" />
             
-            <!-- Removed ComboBox for Profile Selection -->
-            
-            <StackPanel Orientation="Horizontal">
-                <Button Name="createProfileButton" Content="Create Profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,5,10" />
-                <Button Name="loadProfileButton" Content="Load Profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,10" />
-            </StackPanel>
+            <!-- 2x2 Grid for Profile Management Buttons -->
+            <Grid>
+                <!-- Define Rows and Columns for the 2x2 Grid -->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Buttons for Profile Management -->
+                <Button Name="createProfileButton" Content="Create Profile" Style="{StaticResource PrimaryButtonStyle}" Grid.Row="0" Grid.Column="0" Margin="0,0,5,5" />
+                <Button Name="loadProfileButton" Content="Load Profile" Style="{StaticResource PrimaryButtonStyle}" Grid.Row="0" Grid.Column="1" Margin="0,0,0,5" />
+                <Button Name="saveProfileButton" Content="Save Profile" Style="{StaticResource PrimaryButtonStyle}" Grid.Row="1" Grid.Column="0" Margin="0,5,5,0" />
+                <Button Name="deleteProfileButton" Content="Delete Profile" Style="{StaticResource PrimaryButtonStyle}" Grid.Row="1" Grid.Column="1" Margin="0,5,0,0" />
+            </Grid>
 
             <TextBlock Text="Input URL" Style="{StaticResource HeaderTextStyle}" />
             <TextBox Name="IncomingUrlTextBox" />
@@ -79,8 +91,6 @@
                 <Button Name="startStreamButton" Content="Start" Background="#70AD47" Foreground="White" Style="{StaticResource PrimaryButtonStyle}" Width="100" />
                 <Button Name="stopStreamButton" Content="Stop" Background="#C00000" Foreground="White" Style="{StaticResource PrimaryButtonStyle}" Width="100" Margin="10,0,0,0" />
             </StackPanel>
-
-            <Button Name="saveProfileButton" Content="Save Profile" Style="{StaticResource PrimaryButtonStyle}" Margin="0,20,0,0" />
         </StackPanel>
 
         <!-- Right Panel -->

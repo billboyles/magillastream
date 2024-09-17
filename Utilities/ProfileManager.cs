@@ -80,5 +80,15 @@ namespace Utilities
 
             return profileNames;
         }
+
+        public void DeleteProfile(string profileName)
+        {
+            var profilePath = Path.Combine(_profileDirectory, $"{profileName}.json");
+
+            if (File.Exists(profilePath))
+            {
+                File.Delete(profilePath);
+            }
+        }
     }
 }
