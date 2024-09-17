@@ -3,11 +3,11 @@ using System.Windows;
 
 namespace Frontend
 {
-    public partial class ProfileSelectionDialog : Window
+    public partial class LoadProfileDialog : Window
     {
         public string SelectedProfile { get; private set; }
 
-        public ProfileSelectionDialog(List<string> profiles)
+        public LoadProfileDialog(List<string> profiles)
         {
             InitializeComponent();
             ProfilesComboBox.ItemsSource = profiles;

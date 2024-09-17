@@ -58,6 +58,9 @@ namespace Frontend
             loadProfileButton.Click -= LoadProfileButton_Click;
             loadProfileButton.Click += LoadProfileButton_Click;
 
+            deleteProfileButton.Click -= DeleteProfileButton_Click;
+            deleteProfileButton.Click += DeleteProfileButton_Click;
+
             startStreamButton.Click -= StartStreamButton_Click;
             startStreamButton.Click += StartStreamButton_Click;
 
@@ -243,35 +246,48 @@ namespace Frontend
         // Event handler for creating a new profile
         private void CreateProfileButton_Click(object sender, RoutedEventArgs e)
         {
-            string profileName = Microsoft.VisualBasic.Interaction.InputBox("Enter Profile Name", "Create Profile");
+            CreateProfileDialog dialog = new CreateProfileDialog();
+            dialog.ShowDialog();
+        }
 
-            if (string.IsNullOrEmpty(profileName))
-            {
-                MessageBox.Show("Profile name cannot be empty.");
-                return;
-            }
+        // Event handler for loading a profile
+        private void LoadProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the list of profiles from ProfileManager
+            List<string> profiles = _profileManager.GetProfilesList();
 
-            Profile profile = new Profile
+            // Open the custom profile selection dialog
+            LoadProfileDialog profileDialog = new LoadProfileDialog(profiles);
+            
+            if (profileDialog.ShowDialog() == true)
             {
-                ProfileName = profileName,
-                IncomingUrl = IncomingUrlTextBox.Text,
-                OutputGroups = new List<OutputGroup>(),
-                GeneratePTS = GeneratePTSCheckBox.IsChecked ?? false,
-                Theme = "light",
-                Language = "en-US"
-            };
+                // Load the selected profile
+                string selectedProfile = profileDialog.SelectedProfile;
 
-            try
-            {
-                _profileManager.CreateProfile(profileName, profile);
-                MessageBox.Show("Profile created successfully!");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error creating profile: {ex.Message}");
+                try
+                {
+                    Profile loadedProfile = _profileManager.LoadProfile(selectedProfile);
+                    ApplyProfileToGUI(loadedProfile);
+
+                    // Update the last opened profile
+                    _appSettings.LastUsedProfile = selectedProfile;
+                    _appSettings.Save();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading profile: {ex.Message}");
+                }
             }
         }
 
+        // Event handler for deleting a new profile
+        private void DeleteProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            DeleteProfileDialog dialog = new DeleteProfileDialog();
+            dialog.ShowDialog();
+        }
+
+        // Event handler for saving a profile
         private void SaveProfileButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -299,36 +315,6 @@ namespace Frontend
             {
                 // Show an error message if something goes wrong
                 MessageBox.Show($"Error saving profile: {ex.Message}");
-            }
-        }
-
-        // Event handler for loading a profile
-        private void LoadProfileButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Get the list of profiles from ProfileManager
-            List<string> profiles = _profileManager.GetProfilesList();
-
-            // Open the custom profile selection dialog
-            ProfileSelectionDialog profileDialog = new ProfileSelectionDialog(profiles);
-            
-            if (profileDialog.ShowDialog() == true)
-            {
-                // Load the selected profile
-                string selectedProfile = profileDialog.SelectedProfile;
-
-                try
-                {
-                    Profile loadedProfile = _profileManager.LoadProfile(selectedProfile);
-                    ApplyProfileToGUI(loadedProfile);
-
-                    // Update the last opened profile
-                    _appSettings.LastUsedProfile = selectedProfile;
-                    _appSettings.Save();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error loading profile: {ex.Message}");
-                }
             }
         }
 
