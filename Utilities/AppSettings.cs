@@ -4,7 +4,8 @@ using System.Text.Json;
 
 public class AppSettings
 {
-    public string LastUsedProfile { get; set; } = ""; 
+    public string LastUsedProfile { get; set; } = "";
+    public bool FirstLaunch { get; set; } = true; 
 
     private static readonly string SettingsFile = "appsettings.json";
 

@@ -30,17 +30,32 @@ namespace Frontend
             // Load AppSettings
             _appSettings = AppSettings.Load();
 
-            // Load last used profile if it exists
-            if (!string.IsNullOrEmpty(_appSettings.LastUsedProfile))
+            // Check if it's the first launch, load last used profile if it exists
+            if (_appSettings.FirstLaunch)
             {
+                // Perform first-time setup actions (e.g., prompt to create a profile)
+                MessageBox.Show("Welcome to the app! Let's get started by setting up your profile.", "First Launch", MessageBoxButton.OK, MessageBoxImage.Information);
+                CreateProfileButton_Click(null, null);
+
+                // After first launch actions, set FirstLaunch to false and save
+                _appSettings.FirstLaunch = false;
+                _appSettings.Save();
+            }
+            else if (!string.IsNullOrEmpty(_appSettings.LastUsedProfile))
+            {
+                // Load last used profile if it's not the first launch
                 try
                 {
                     Profile lastProfile = _profileManager.LoadProfile(_appSettings.LastUsedProfile);
                     ApplyProfileToGUI(lastProfile);
                 }
+                catch (FileNotFoundException)
+                {
+                    MessageBox.Show("The last used profile could not be found. Please create or load a new profile.", "Profile Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error loading last used profile: {ex.Message}");
+                    MessageBox.Show($"An error occurred while loading the last used profile: {ex.Message}", "Error Loading Profile", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
 
