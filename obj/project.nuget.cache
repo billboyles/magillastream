@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "2gKSwJVZ/LM=",
+  "dgSpecHash": "qccCF3jM6Qw=",
   "success": true,
-  "projectFilePath": "C:\\Users\\billb\\magillastream\\magillastream.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\Users\\billb\\magillastream\\MagillaStream.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\billb\\.nuget\\packages\\bouncycastle.netcore\\2.2.1\\bouncycastle.netcore.2.2.1.nupkg.sha512"
+  ],
   "logs": []
 }

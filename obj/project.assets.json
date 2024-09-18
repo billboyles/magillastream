@@ -1,11 +1,43 @@
 {
   "version": 3,
   "targets": {
-    "net8.0-windows7.0": {}
+    "net8.0-windows7.0": {
+      "BouncyCastle.NetCore/2.2.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/BouncyCastle.Crypto.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/BouncyCastle.Crypto.dll": {
+            "related": ".xml"
+          }
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "BouncyCastle.NetCore/2.2.1": {
+      "sha512": "yfWn8JYPc4rkeM2kcsCqFVFOvwCuuQvIieGtQWcjoWxOioeznXQB3M/GmHgbCWbJjc8ycrwGhZaZPiasifYi4A==",
+      "type": "package",
+      "path": "bouncycastle.netcore/2.2.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "bouncycastle.netcore.2.2.1.nupkg.sha512",
+        "bouncycastle.netcore.nuspec",
+        "lib/net45/BouncyCastle.Crypto.dll",
+        "lib/net45/BouncyCastle.Crypto.xml",
+        "lib/netstandard2.0/BouncyCastle.Crypto.dll",
+        "lib/netstandard2.0/BouncyCastle.Crypto.xml"
+      ]
+    }
+  },
   "projectFileDependencyGroups": {
-    "net8.0-windows7.0": []
+    "net8.0-windows7.0": [
+      "BouncyCastle.NetCore >= 2.2.1"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\billb\\.nuget\\packages\\": {},
@@ -14,9 +46,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\billb\\magillastream\\magillastream.csproj",
-      "projectName": "magillastream",
-      "projectPath": "C:\\Users\\billb\\magillastream\\magillastream.csproj",
+      "projectUniqueName": "C:\\Users\\billb\\magillastream\\MagillaStream.csproj",
+      "projectName": "MagillaStream",
+      "projectPath": "C:\\Users\\billb\\magillastream\\MagillaStream.csproj",
       "packagesPath": "C:\\Users\\billb\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\billb\\magillastream\\obj\\",
       "projectStyle": "PackageReference",
@@ -55,6 +87,12 @@
     "frameworks": {
       "net8.0-windows7.0": {
         "targetAlias": "net8.0-windows",
+        "dependencies": {
+          "BouncyCastle.NetCore": {
+            "target": "Package",
+            "version": "[2.2.1, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",
