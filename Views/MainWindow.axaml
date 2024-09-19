@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MagillaStream.Views.MainWindow"
+        xmlns:vm="clr-namespace:MagillaStream.ViewModels"
+        Title="MagillaStream" Width="1000" Height="600">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <!-- Column for profile management buttons -->
+            <ColumnDefinition Width="200"/>
+            <!-- Column for dynamic output groups -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Profile Management Section -->
+        <StackPanel Grid.Column="0" Margin="10">
+            <TextBlock Text="Profile Management" FontWeight="Bold" />
+            
+            <Button Content="Add Profile" Click="ShowProfileDialog" Width="150" />
+            <Button Content="Load Profile" Click="ShowProfileDialog" Width="150" />
+            <Button Content="Delete Profile" Click="ShowProfileDialog" Width="150" />
+            <Button Content="Save Profile" Click="SaveProfile_Click" Width="150" />
+
+            <!-- Incoming URL Field -->
+            <TextBlock Text="Incoming URL:" Margin="0,10,0,0"/>
+            <TextBox x:Name="IncomingUrlTextBox" Text="{Binding IncomingURL, Mode=TwoWay}" Width="180" Watermark="Enter Incoming URL..." />
+
+            <!-- Generate PTS Checkbox -->
+            <CheckBox x:Name="GeneratePTSCheckBox" Content="Generate PTS" IsChecked="{Binding GeneratePTS, Mode=TwoWay}" Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <!-- Dynamic Output Groups Section -->
+        <StackPanel Grid.Column="1" Margin="10">
+            <TextBlock Text="Output Groups" FontWeight="Bold" />
+
+            <!-- Button to add new output group -->
+            <Button Content="Add Output Group" Click="AddOutputGroup_Click" Width="200" Margin="0,10,0,10" />
+
+            <!-- Display the list of output groups -->
+            <ItemsControl ItemsSource="{Binding OutputGroups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBox Text="{Binding Name}" Watermark="Group Name" Width="200" />
+                            <Button Content="Remove Output Group" Command="{Binding RemoveOutputGroupCommand}" CommandParameter="{Binding}" Width="150" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Grid>
+</Window>

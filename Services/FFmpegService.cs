@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using MagillaStream.Models;
 
@@ -5,7 +6,7 @@ namespace MagillaStream.Services
 {
     public class FFmpegService
     {
-        private Process _ffmpegProcess;
+        private Process? _ffmpegProcess;
 
         // Start a single FFmpeg process for all output groups
         public void StartFFmpegProcess(Profile profile)

@@ -1,44 +1,31 @@
-using System.ComponentModel;
-using System.Windows.Input;
-using MagillaStream.Utilities;
+using System.Collections.ObjectModel;
+using System.Reactive;
+using ReactiveUI;
 using MagillaStream.Models;
 
 namespace MagillaStream.ViewModels
 {
-    public class ProfileViewModel : INotifyPropertyChanged
+    public class ProfileViewModel : ReactiveObject
     {
-        private readonly ProfileManager _profileManager;
-        private Profile _currentProfile;
-
-        public Profile CurrentProfile
+        private string _profileName;
+        public string ProfileName
         {
-            get { return _currentProfile; }
-            set 
-            {
-                _currentProfile = value;
-                OnPropertyChanged(nameof(CurrentProfile));
-            }
+            get => _profileName;
+            set => this.RaiseAndSetIfChanged(ref _profileName, value);
         }
 
-        public ICommand SaveProfileCommand { get; set; }
+        public ObservableCollection<OutputGroup> OutputGroups { get; set; } = new ObservableCollection<OutputGroup>();
 
-        public ProfileViewModel(ProfileManager profileManager)
+        public ReactiveCommand<Unit, Unit> AddOutputGroupCommand { get; }
+
+        public ProfileViewModel()
         {
-            _profileManager = profileManager;
-
-            // Define SaveProfileCommand to use the ProfileManager service
-            SaveProfileCommand = new RelayCommand(SaveProfile);
+            AddOutputGroupCommand = ReactiveCommand.Create(AddOutputGroup);
         }
 
-        private void SaveProfile()
+        private void AddOutputGroup()
         {
-            _profileManager.SaveProfile(CurrentProfile);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            OutputGroups.Add(new OutputGroup { Name = $"Group {OutputGroups.Count + 1}" });
         }
     }
 }

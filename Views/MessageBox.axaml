@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MagillaStream.Views.MessageBox"
+        Title="Message"
+        Width="300"
+        Height="150">
+
+    <StackPanel Margin="20">
+        <TextBlock x:Name="MessageTextBlock" />
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button x:Name="OkButton" Content="OK" Click="OkButton_Click" IsVisible="False"/>
+            <Button x:Name="YesButton" Content="Yes" Click="YesButton_Click" IsVisible="False"/>
+            <Button x:Name="NoButton" Content="No" Click="NoButton_Click" IsVisible="False"/>
+            <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click" IsVisible="False"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

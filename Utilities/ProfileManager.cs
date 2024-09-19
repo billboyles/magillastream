@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using MagillaStream.Models;
@@ -6,7 +8,7 @@ namespace MagillaStream.Utilities
 {
     public class ProfileManager
     {
-        private readonly string _profileDirectory = "profiles";
+        private readonly string _profileDirectory = "Profiles";
 
         // Create a new profile
         public void CreateProfile(Profile profile)

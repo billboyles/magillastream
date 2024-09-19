@@ -3,8 +3,6 @@
 bin/
 obj/
 
-# Ignore Visual Studio working directory files
-.vs/
 
 # Ignore NuGet packages folder
 packages/
@@ -19,10 +17,13 @@ Logs/
 *.log
 
 # Ignore profiles directory
-profiles/
+Profiles/
 
 # Ignore AppSettings files
 appsettings.json
 
 # Ignore zip
 *.zip
+
+# Ignore ,net dir
+.net8.0/
