@@ -21,7 +21,7 @@
             <StackPanel Margin="0, 0, 0, 20">
                 <TextBlock Text="Profile Management" FontWeight="Bold" Foreground="White" FontSize="18" Margin="0, 0, 0, 10" />
 
-                <Button Content="Add Profile" Command="{Binding AddProfileCommand}" Width="200" Background="#4285F4" Foreground="White" Margin="0,8"/>
+                <Button Content="Create Profile" Command="{Binding CreateProfileCommand}" Width="200" Background="#4285F4" Foreground="White" Margin="0,8"/>
                 <Button Content="Load Profile" Command="{Binding LoadProfileCommand}" Width="200" Background="#4285F4" Foreground="White" Margin="0,8"/>
                 <Button Content="Delete Profile" Command="{Binding DeleteProfileCommand}" Width="200" Background="#DB4437" Foreground="White" Margin="0,8"/>
                 <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" Width="200" Background="#0F9D58" Foreground="White" Margin="0,8"/>
