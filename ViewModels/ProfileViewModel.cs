@@ -33,6 +33,10 @@ namespace MagillaStream.ViewModels
             set => this.RaiseAndSetIfChanged(ref _profileName, value);
         }
 
+        public string IncomingURL { get; set; }
+        public bool GeneratePTS { get; set; }
+        public ObservableCollection<OutputGroup> OutputGroups { get; set; } = new ObservableCollection<OutputGroup>();
+
         public ObservableCollection<string> AvailableProfiles { get; set; } = new ObservableCollection<string>();
         private readonly ProfileManager _profileManager;
 
@@ -115,17 +119,19 @@ namespace MagillaStream.ViewModels
         {
             if (string.IsNullOrWhiteSpace(ProfileName))
             {
-                // Handle case where profile name is empty or invalid
-                return null;
+                return null; // Handle error for invalid profile name
             }
 
             var profile = new Profile
             {
                 ProfileName = ProfileName,
-                // Add other profile data like OutputGroups
+                IncomingUrl = this.IncomingURL,  // Save the state passed from MainWindow
+                GeneratePTS = this.GeneratePTS,
+                OutputGroups = OutputGroups.ToList()
             };
 
             _profileManager.SaveProfile(profile);
+
             return profile;
         }
 

@@ -1,4 +1,5 @@
 using System.Reactive;
+using System.Collections.ObjectModel;
 using ReactiveUI;
 using Avalonia.Controls;
 using MagillaStream.Views;
@@ -35,6 +36,9 @@ namespace MagillaStream.ViewModels
             set => this.RaiseAndSetIfChanged(ref _generatePTS, value);
         }
 
+        // Property to track Output Groups
+        public ObservableCollection<OutputGroup> OutputGroups { get; set; } = new ObservableCollection<OutputGroup>();
+
         public ReactiveCommand<Unit, Unit> CreateProfileCommand { get; }
         public ReactiveCommand<Unit, Unit> LoadProfileCommand { get; }
         public ReactiveCommand<Unit, Unit> SaveProfileCommand { get; }
@@ -63,21 +67,26 @@ namespace MagillaStream.ViewModels
         // Open the profile dialog based on the dialog context
         private async void OpenProfileDialog(string dialogContext)
         {
-            var profileViewModel = new ProfileViewModel(dialogContext);
-            
-            // Assign a handler to CloseDialog that applies the profile to the GUI
+            // Pass the current state (IncomingURL, GeneratePTS, etc.) to ProfileViewModel
+            var profileViewModel = new ProfileViewModel(dialogContext)
+            {
+                IncomingURL = this.IncomingURL,   // Pass current state
+                GeneratePTS = this.GeneratePTS,
+                OutputGroups = new ObservableCollection<OutputGroup>(this.OutputGroups)  // Pass OutputGroups
+            };
+
             profileViewModel.CloseDialog = (profile) =>
             {
                 if (profile != null)
                 {
-                    ApplyProfileToGui(profile);  // Update the GUI with the loaded or created profile
+                    ApplyProfileToGui(profile);  // Update the MainWindow GUI if needed
                 }
             };
 
             var profileDialog = new ProfileDialog(profileViewModel);
-            
-            await profileDialog.ShowDialog(_mainWindow);  // Show the dialog asynchronously
+            await profileDialog.ShowDialog(_mainWindow);
         }
+
         // This method applies the loaded profile to the GUI
         private void ApplyProfileToGui(Profile profile)
         {
