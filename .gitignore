@@ -22,6 +22,9 @@ Profiles/
 # Ignore AppSettings files
 appsettings.json
 
+# Ignore Settings directory
+Settings/
+
 # Ignore zip
 *.zip
 

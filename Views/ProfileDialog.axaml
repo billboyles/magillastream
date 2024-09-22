@@ -6,15 +6,21 @@
         Title="Profile Dialog" Width="400" Height="200">
 
     <StackPanel Margin="20">
+        <!-- TextBox for Profile Name Input -->
         <TextBlock Text="Enter Profile Name:" FontSize="14" IsVisible="{Binding ShowTextBox}" />
         <TextBox Text="{Binding ProfileName}" Watermark="Profile Name..." Margin="0,10,0,20" IsVisible="{Binding ShowTextBox}" />
-        
+
+        <!-- ComboBox for Profile Selection -->
         <TextBlock Text="Select a Profile:" FontSize="14" IsVisible="{Binding ShowComboBox}" />
         <ComboBox ItemsSource="{Binding AvailableProfiles}" SelectedItem="{Binding ProfileName}" IsVisible="{Binding ShowComboBox}" Margin="0,10,0,20" Width="200"/>
-        
+
+        <!-- Confirmation Message -->
+        <TextBlock Text="Do you want to overwrite your profile?" FontSize="14" Foreground="Red" IsVisible="{Binding ShowConfirmationMessage}" Margin="0,20,0,10"/>
+
+        <!-- Buttons -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="OK" Command="{Binding OkCommand}" Width="80" Margin="0,0,10,0" Background="LightBlue" Foreground="White" />
-            <Button Content="Cancel" Width="80" Background="LightGray" Foreground="Black" Click="Cancel_Click"/>
+            <Button Content="OK" Command="{Binding OkCommand}" Width="80" Margin="0,0,10,0" Background="#4285F4" Foreground="White" />
+            <Button Content="Cancel" Width="80" Background="LightGray" Foreground="Black" Command="{Binding CancelCommand}"/>
         </StackPanel>
     </StackPanel>
 </Window>
