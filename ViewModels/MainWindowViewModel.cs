@@ -13,16 +13,15 @@ namespace MagillaStream.ViewModels
         private readonly Window _mainWindow;
         private readonly ProfileManager _profileManager;
 
-        // Property to track the currently loaded profile
-        private string _currentProfileName = string.Empty;
-        public string CurrentProfileName
+        // Directly expose LastUsedProfile from AppSettings for GUI binding
+        public string LastUsedProfile
         {
-            get => _currentProfileName;
+            get => AppSettings.Instance.LastUsedProfile;
             set
             {
-                Logger.Debug($"Setting CurrentProfileName to: {value}");
-                this.RaiseAndSetIfChanged(ref _currentProfileName, value);
-                AppSettings.Instance.LastUsedProfile = value;  // Directly update AppSettings when the profile changes
+                Logger.Debug($"Setting LastUsedProfile to: {value}");
+                AppSettings.Instance.LastUsedProfile = value;
+                this.RaisePropertyChanged(nameof(LastUsedProfile));
             }
         }
 
@@ -111,11 +110,14 @@ namespace MagillaStream.ViewModels
             {
                 if (profile != null)
                 {
-                    Logger.Debug($"Applying profile: {profile.ProfileName}");
-                    ApplyProfileToGui(profile);  // Apply the new profile settings to the GUI
+                    Logger.Debug($"Profile received from dialog: {profile.ProfileName}");
+                    
+                    // Apply profile settings to the GUI
+                    ApplyProfileToGui(profile);
 
-                    // Update and save AppSettings after applying the profile
+                    // Update LastUsedProfile and save AppSettings
                     AppSettings.Instance.LastUsedProfile = profile.ProfileName;
+                    AppSettings.Instance.Save();
                 }
                 else
                 {
@@ -124,26 +126,24 @@ namespace MagillaStream.ViewModels
             };
 
             var profileDialog = new ProfileDialog(profileViewModel);
-            await profileDialog.ShowDialog(_mainWindow);  // Await the completion of the dialog
-
-            // Save settings after the dialog has completed and profile is applied
-            AppSettings.Instance.Save();
+            await profileDialog.ShowDialog(_mainWindow);
         }
 
         // Apply the loaded profile data to the GUI
         private void ApplyProfileToGui(Profile profile)
         {
-            IncomingURL = profile.IncomingUrl;
-            GeneratePTS = profile.GeneratePTS;
-            CurrentProfileName = profile.ProfileName;
+            // Use the properties to ensure RaiseAndSetIfChanged is triggered for UI updates
+            IncomingURL = profile.IncomingUrl ?? "No URL Provided";  // Set IncomingURL via property
+            GeneratePTS = profile.GeneratePTS;                        // Set GeneratePTS via property
 
+            // Clear and add output groups
             OutputGroups.Clear();
             foreach (var group in profile.OutputGroups)
             {
-                OutputGroups.Add(group);
+                OutputGroups.Add(group);  // Add each output group from the profile
             }
 
-            Logger.Debug($"Profile {profile.ProfileName} applied to the GUI.");
+            Logger.Debug($"Profile {profile.ProfileName} applied to the GUI: {profile.IncomingUrl}, {profile.GeneratePTS}.");
         }
 
         // Load the last used profile (if it exists)
@@ -173,7 +173,7 @@ namespace MagillaStream.ViewModels
             {
                 Logger.Debug($"Profile {profileName} loaded successfully.");
                 ApplyProfileToGui(profile);
-                AppSettings.Instance.LastUsedProfile = profileName; // Directly update AppSettings when the profile is loaded
+                LastUsedProfile = profileName;  // Directly update LastUsedProfile when the profile is loaded
                 AppSettings.Instance.Save();  // Save the updated settings
             }
             else
