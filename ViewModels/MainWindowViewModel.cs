@@ -63,6 +63,16 @@ namespace MagillaStream.ViewModels
 
             Logger.Info($"AppSettings loaded with the following values: LastUsedProfile: {AppSettings.Instance.LastUsedProfile}; FirstLaunch: {AppSettings.Instance.FirstLaunch}");
 
+            // Set AppSettings.FirstLaunch to false after the first launch
+            if (AppSettings.Instance.FirstLaunch)
+            {
+                Logger.Info("First launch detected, setting FirstLaunch to false.");
+                AppSettings.Instance.FirstLaunch = false;
+                AppSettings.Instance.Save();
+
+                // Show the welcome dialog on first launch
+            }
+
             CreateProfileCommand = ReactiveCommand.Create(() =>
             {
                 Logger.Debug("CreateProfileCommand triggered");
