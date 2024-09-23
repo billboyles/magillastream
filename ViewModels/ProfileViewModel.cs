@@ -68,6 +68,14 @@ namespace MagillaStream.ViewModels
             ProfileApplied?.Invoke(this, profile);
         }
 
+        public event EventHandler ProfileDeleted;
+
+        private void OnProfileDeleted()
+        {
+            ProfileDeleted?.Invoke(this, EventArgs.Empty); // Trigger the event
+        }
+
+
         public string DialogContext { get; }
 
         // Confirmation message visibility and text
@@ -278,6 +286,9 @@ namespace MagillaStream.ViewModels
             // Update AppSettings after deletion
             AppSettings.Instance.LastUsedProfile = string.Empty;
             AppSettings.Instance.Save();
+
+            // Trigger the ProfileDeleted event to notify MainWindowViewModel
+            OnProfileDeleted();
         }
 
         // Load available profiles for the ComboBox

@@ -116,7 +116,15 @@ namespace MagillaStream.ViewModels
                 OutputGroups = new ObservableCollection<OutputGroup>(this.OutputGroups)
             };
 
-            // Subscribe to the event
+            // Subscribe to the ProfileDeleted event to reset the GUI
+            profileViewModel.ProfileDeleted += (sender, args) =>
+            {
+                Logger.Debug("Profile deleted, resetting GUI.");
+                AppSettings.Instance.LastUsedProfile = "";
+                ResetGui();
+            };
+
+            // Subscribe to the ProfileSaved event to update the GUI
             profileViewModel.ProfileApplied += (sender, profile) =>
             {
                 if (profile != null)
@@ -198,6 +206,18 @@ namespace MagillaStream.ViewModels
             {
                 Logger.Error($"Failed to load profile: {profileName}");
             }
+        }
+
+        private void ResetGui()
+        {
+            Logger.Debug("Resetting GUI to blank state.");
+
+            IncomingURL = string.Empty;
+            GeneratePTS = false;
+            OutputGroups.Clear(); // Clear the OutputGroups collection
+             LastUsedProfile = ""; // Clear the LastUsedProfile
+
+            Logger.Debug("GUI reset completed.");
         }
     }
 }
