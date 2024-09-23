@@ -61,6 +61,13 @@ namespace MagillaStream.ViewModels
         // Delegate to close the dialog from the ViewModel
         public Action<Profile> CloseDialog { get; set; }
 
+        public event EventHandler<Profile> ProfileApplied;
+
+        private void OnProfileApplied(Profile profile)
+        {
+            ProfileApplied?.Invoke(this, profile);
+        }
+
         public string DialogContext { get; }
 
         // Confirmation message visibility and text
@@ -134,6 +141,7 @@ namespace MagillaStream.ViewModels
         // This method executes the correct action based on the dialog context and closes the dialog
         private void ExecuteOkCommand()
         {
+            Logger.Debug($"Okcommand triggered: {DialogContext}");
             Profile profile = null;
 
             switch (DialogContext)
@@ -159,8 +167,15 @@ namespace MagillaStream.ViewModels
                     break;
             }
 
+            if (profile != null)
+            {
+                Logger.Debug($"ProfileViewModel - Profile ready: {profile.ProfileName}");
+                OnProfileApplied(profile);  // Raise the event
+            }
+
             // After performing the action, close the dialog and pass back the profile
-            CloseDialog?.Invoke(profile);
+            Logger.Debug($"ProfileViewModel - Closing dialog with profile: {profile?.ProfileName}");
+            CloseDialog.Invoke(profile);
         }
 
         // Profile creation logic

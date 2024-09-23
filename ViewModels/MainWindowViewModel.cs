@@ -116,22 +116,19 @@ namespace MagillaStream.ViewModels
                 OutputGroups = new ObservableCollection<OutputGroup>(this.OutputGroups)
             };
 
-            profileViewModel.CloseDialog = (profile) =>
+            // Subscribe to the event
+            profileViewModel.ProfileApplied += (sender, profile) =>
             {
                 if (profile != null)
                 {
-                    Logger.Debug($"Profile received from dialog: {profile.ProfileName}");
-                    
-                    // Apply profile settings to the GUI
-                    ApplyProfileToGui(profile);
-
-                    // Update LastUsedProfile and save AppSettings
+                    Logger.Debug($"MainWindowViewModel - ProfileApplied event triggered with profile: {profile.ProfileName}");
+                    ApplyProfileToGui(profile);  // Apply profile
                     AppSettings.Instance.LastUsedProfile = profile.ProfileName;
                     AppSettings.Instance.Save();
                 }
                 else
                 {
-                    Logger.Error("Received null profile from dialog, no changes applied.");
+                    Logger.Error("MainWindowViewModel - Profile is null.");
                 }
             };
 
@@ -142,19 +139,30 @@ namespace MagillaStream.ViewModels
         // Apply the loaded profile data to the GUI
         private void ApplyProfileToGui(Profile profile)
         {
-            // Use the properties to ensure RaiseAndSetIfChanged is triggered for UI updates
-            IncomingURL = profile.IncomingUrl ?? "No URL Provided";  // Set IncomingURL via property
-            GeneratePTS = profile.GeneratePTS;                        // Set GeneratePTS via property
+            Logger.Debug($"Applying profile to GUI: {profile.ProfileName}.");
 
-            // Clear and add output groups
+            IncomingURL = profile.IncomingUrl ?? "No URL Provided";
+            Logger.Debug($"IncomingURL set to: {IncomingURL}");
+
+            GeneratePTS = profile.GeneratePTS;
+            Logger.Debug($"GeneratePTS set to: {GeneratePTS}");
+
             OutputGroups.Clear();
+            Logger.Debug("Cleared OutputGroups.");
+            
             foreach (var group in profile.OutputGroups)
             {
-                OutputGroups.Add(group);  // Add each output group from the profile
+                OutputGroups.Add(group);
+                Logger.Debug($"Added OutputGroup: {group.Name}");
             }
+
+            // Update the LastUsedProfile, which updates the Current Profile field in the UI
+            LastUsedProfile = profile.ProfileName;
+            Logger.Debug($"LastUsedProfile set to: {LastUsedProfile}");
 
             Logger.Debug($"Profile {profile.ProfileName} applied to the GUI: {profile.IncomingUrl}, {profile.GeneratePTS}.");
         }
+
 
         // Load the last used profile (if it exists)
         private void LoadLastUsedProfile()
