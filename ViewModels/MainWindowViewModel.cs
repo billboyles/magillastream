@@ -1,5 +1,7 @@
+using System;
 using System.Reactive;
 using System.Collections.ObjectModel;
+using System.Linq;
 using ReactiveUI;
 using Avalonia.Controls;
 using MagillaStream.Views;
@@ -55,6 +57,9 @@ namespace MagillaStream.ViewModels
         public ReactiveCommand<Unit, Unit> SaveProfileCommand { get; }
         public ReactiveCommand<Unit, Unit> DeleteProfileCommand { get; }
         public ReactiveCommand<Unit, Unit> AddOutputGroupCommand { get; }
+        public ReactiveCommand<OutputGroup, Unit> RemoveOutputGroupCommand { get; }
+        public ReactiveCommand<(OutputGroup, StreamTarget), Unit> RemoveStreamTargetCommand { get; }
+        public ReactiveCommand<OutputGroup, Unit> AddStreamTargetCommand { get; }
 
         public MainWindowViewModel(Window mainWindow)
         {
@@ -67,7 +72,6 @@ namespace MagillaStream.ViewModels
             _mainWindow.Opened += (sender, args) =>
             {
                 Logger.Debug($"AppSettings.FirstLaunch is {AppSettings.Instance.FirstLaunch}.");
-                // Check if FirstLaunch is true before showing the welcome dialog
                 if (AppSettings.Instance.FirstLaunch)
                 {
                     Logger.Info("First launch detected, showing Welcome Dialog.");
@@ -84,6 +88,7 @@ namespace MagillaStream.ViewModels
                 }
             };
 
+            // Profile commands
             CreateProfileCommand = ReactiveCommand.Create(() =>
             {
                 Logger.Debug("CreateProfileCommand triggered");
@@ -108,10 +113,31 @@ namespace MagillaStream.ViewModels
                 OpenProfileDialog("Delete Profile");
             });
 
+            // Output group and stream target commands
             AddOutputGroupCommand = ReactiveCommand.Create(() =>
             {
                 Logger.Debug("AddOutputGroupCommand triggered");
                 OutputGroups.Add(new OutputGroup { Name = $"Group {OutputGroups.Count + 1}" });
+            });
+
+            RemoveOutputGroupCommand = ReactiveCommand.Create<OutputGroup>(outputGroup =>
+            {
+                Logger.Debug($"Removing OutputGroup: {outputGroup.Name}");
+                OutputGroups.Remove(outputGroup);
+            });
+
+            AddStreamTargetCommand = ReactiveCommand.Create<OutputGroup>(outputGroup =>
+            {
+                Logger.Debug($"Adding StreamTarget to OutputGroup: {outputGroup.Name}");
+                outputGroup.StreamTargets.Add(new StreamTarget { Url = "New Target URL", StreamKey = "New Stream Key" });
+            });
+
+            // Handle tuple binding for removing stream target
+            RemoveStreamTargetCommand = ReactiveCommand.Create<(OutputGroup, StreamTarget)>(tuple =>
+            {
+                var (outputGroup, streamTarget) = tuple;
+                Logger.Debug($"Removing StreamTarget from OutputGroup: {outputGroup.Name}");
+                outputGroup.StreamTargets.Remove(streamTarget);
             });
 
             LoadLastUsedProfile();
@@ -181,7 +207,6 @@ namespace MagillaStream.ViewModels
 
             Logger.Debug($"Profile {profile.ProfileName} applied to the GUI: {profile.IncomingUrl}, {profile.GeneratePTS}.");
         }
-
 
         // Load the last used profile (if it exists)
         private void LoadLastUsedProfile()

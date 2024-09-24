@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace MagillaStream.Utilities
+namespace MagillaStream.Converters
 {
     public class ProfileNameNullToDefaultConverter : IValueConverter
     {
