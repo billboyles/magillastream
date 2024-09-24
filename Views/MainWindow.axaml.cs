@@ -8,7 +8,10 @@ namespace MagillaStream.Views
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel(this);  // Pass the current window to the ViewModel
+            
+            // Set DataContext and pass the current window to the ViewModel
+            var mainWindowViewModel = new MainWindowViewModel(this);
+            DataContext = mainWindowViewModel;
         }
     }
 }

@@ -63,15 +63,26 @@ namespace MagillaStream.ViewModels
 
             Logger.Info($"AppSettings loaded with the following values: LastUsedProfile: {AppSettings.Instance.LastUsedProfile}; FirstLaunch: {AppSettings.Instance.FirstLaunch}");
 
-            // Set AppSettings.FirstLaunch to false after the first launch
-            if (AppSettings.Instance.FirstLaunch)
+            // Handle showing the welcome dialog on window opened
+            _mainWindow.Opened += (sender, args) =>
             {
-                Logger.Info("First launch detected, setting FirstLaunch to false.");
-                AppSettings.Instance.FirstLaunch = false;
-                AppSettings.Instance.Save();
+                Logger.Debug($"AppSettings.FirstLaunch is {AppSettings.Instance.FirstLaunch}.");
+                // Check if FirstLaunch is true before showing the welcome dialog
+                if (AppSettings.Instance.FirstLaunch)
+                {
+                    Logger.Info("First launch detected, showing Welcome Dialog.");
+                    ShowWelcomeDialog();  // Show the welcome dialog only after the window is opened
 
-                // Show the welcome dialog on first launch
-            }
+                    // Set FirstLaunch to false and save settings
+                    AppSettings.Instance.FirstLaunch = false;
+                    AppSettings.Instance.Save();
+                    Logger.Info("First launch flag set to false and saved.");
+                }
+                else
+                {
+                    Logger.Debug("First launch is false, Welcome Dialog will not be shown.");
+                }
+            };
 
             CreateProfileCommand = ReactiveCommand.Create(() =>
             {
@@ -215,9 +226,37 @@ namespace MagillaStream.ViewModels
             IncomingURL = string.Empty;
             GeneratePTS = false;
             OutputGroups.Clear(); // Clear the OutputGroups collection
-             LastUsedProfile = ""; // Clear the LastUsedProfile
+            LastUsedProfile = ""; // Clear the LastUsedProfile
 
             Logger.Debug("GUI reset completed.");
+        }
+
+        // Show the welcome dialog
+        public void ShowWelcomeDialog()
+        {
+            var welcomeViewModel = new WelcomeViewModel();
+
+            var welcomeDialog = new WelcomeDialog
+            {
+                DataContext = welcomeViewModel
+            };
+
+            // Assign a method to close the dialog
+            welcomeViewModel.CloseDialog = () =>
+            {
+                Logger.Debug("Closing WelcomeDialog.");
+                welcomeDialog.Close();  // Close the welcome dialog directly
+            };
+
+            // Open the "Create Profile" dialog after closing the WelcomeDialog
+            welcomeViewModel.OpenCreateProfile = () =>
+            {
+                Logger.Debug("Opening Create Profile dialog from WelcomeDialog.");
+                OpenProfileDialog("Create Profile");
+            };
+
+            // Show the welcome dialog
+            welcomeDialog.ShowDialog(_mainWindow);
         }
     }
 }
