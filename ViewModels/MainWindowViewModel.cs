@@ -192,16 +192,20 @@ namespace MagillaStream.ViewModels
             Logger.Debug($"Applying profile to GUI: {profile.ProfileName}.");
 
             IncomingURL = profile.IncomingUrl ?? "No URL Provided";
-            Logger.Debug($"IncomingURL set to: {IncomingURL}");
-
             GeneratePTS = profile.GeneratePTS;
-            Logger.Debug($"GeneratePTS set to: {GeneratePTS}");
 
             OutputGroups.Clear();
             Logger.Debug("Cleared OutputGroups.");
 
             foreach (var group in profile.OutputGroups)
             {
+                // Ensure StreamSettings is initialized
+                if (group.StreamSettings == null)
+                {
+                    group.StreamSettings = new StreamSettings();
+                    Logger.Debug($"StreamSettings initialized for OutputGroup: {group.Name}");
+                }
+
                 // Recreate the commands for each output group
                 group.AddStreamTargetCommand = AddStreamTargetCommand;
                 group.RemoveOutputGroupCommand = RemoveOutputGroupCommand;
@@ -212,7 +216,7 @@ namespace MagillaStream.ViewModels
                 {
                     target.RemoveStreamTargetCommand = RemoveStreamTargetCommand;
                 }
-        
+
                 OutputGroups.Add(group);
                 Logger.Debug($"Added OutputGroup: {group.Name}");
             }

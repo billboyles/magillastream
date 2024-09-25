@@ -126,6 +126,36 @@
                                 <!-- Forward Original Toggle -->
                                 <CheckBox Content="Forward Original" IsChecked="{Binding ForwardOriginal, Mode=TwoWay}" />
 
+                                <!-- Stream Settings -->
+                                <TextBlock Text="Stream Settings" FontWeight="Bold" />
+
+                                <!-- Video Encoder -->
+                                <TextBlock Text="Video Encoder:" />
+                                <TextBox Text="{Binding StreamSettings.VideoEncoder, Mode=TwoWay}" Width="200" />
+
+                                <!-- Encoder Preset -->
+                                <TextBlock Text="Encoder Preset:" />
+                                <TextBox Text="{Binding StreamSettings.EncoderPreset, Mode=TwoWay}" Width="200" />
+
+                                <!-- Resolution -->
+                                <TextBlock Text="Resolution:" />
+                                <TextBox Text="{Binding StreamSettings.Resolution, Mode=TwoWay}" Width="200" />
+
+                                <!-- Frames Per Second -->
+                                <TextBlock Text="FPS:" />
+                                <TextBox Text="{Binding StreamSettings.Fps, Mode=TwoWay}" Width="200" />
+
+                                <!-- Video Bitrate -->
+                                <TextBlock Text="Video Bitrate:" />
+                                <TextBox Text="{Binding StreamSettings.Bitrate, Mode=TwoWay}" Width="200" />
+
+                                <!-- Audio Codec -->
+                                <TextBlock Text="Audio Codec:" />
+                                <TextBox Text="{Binding StreamSettings.AudioCodec, Mode=TwoWay}" Width="200" />
+
+                                <!-- Audio Bitrate -->
+                                <TextBlock Text="Audio Bitrate:" />
+                                <TextBox Text="{Binding StreamSettings.AudioBitrate, Mode=TwoWay}" Width="200" />
                                 <!-- List of Stream Targets -->
                                 <ItemsControl ItemsSource="{Binding StreamTargets}">
                                     <ItemsControl.ItemTemplate>
