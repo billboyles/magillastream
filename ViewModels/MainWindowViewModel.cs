@@ -50,7 +50,7 @@ namespace MagillaStream.ViewModels
         }
 
         // Property to track Output Groups
-        public ObservableCollection<OutputGroup> OutputGroups { get; set; } = new ObservableCollection<OutputGroup>();
+        public ObservableCollection<OutputGroup> OutputGroups { get; set; }
 
         public ReactiveCommand<Unit, Unit> CreateProfileCommand { get; }
         public ReactiveCommand<Unit, Unit> LoadProfileCommand { get; }
@@ -58,7 +58,7 @@ namespace MagillaStream.ViewModels
         public ReactiveCommand<Unit, Unit> DeleteProfileCommand { get; }
         public ReactiveCommand<Unit, Unit> AddOutputGroupCommand { get; }
         public ReactiveCommand<OutputGroup, Unit> RemoveOutputGroupCommand { get; }
-        public ReactiveCommand<(OutputGroup, StreamTarget), Unit> RemoveStreamTargetCommand { get; }
+        public ReactiveCommand<StreamTarget, Unit> RemoveStreamTargetCommand { get; }
         public ReactiveCommand<OutputGroup, Unit> AddStreamTargetCommand { get; }
 
         public MainWindowViewModel(Window mainWindow)
@@ -88,7 +88,7 @@ namespace MagillaStream.ViewModels
                 }
             };
 
-            // Profile commands
+            // Initialize the commands
             CreateProfileCommand = ReactiveCommand.Create(() =>
             {
                 Logger.Debug("CreateProfileCommand triggered");
@@ -117,7 +117,7 @@ namespace MagillaStream.ViewModels
             AddOutputGroupCommand = ReactiveCommand.Create(() =>
             {
                 Logger.Debug("AddOutputGroupCommand triggered");
-                OutputGroups.Add(new OutputGroup { Name = $"Group {OutputGroups.Count + 1}" });
+                OutputGroups.Add(new OutputGroup(AddStreamTargetCommand, RemoveOutputGroupCommand, RemoveStreamTargetCommand));
             });
 
             RemoveOutputGroupCommand = ReactiveCommand.Create<OutputGroup>(outputGroup =>
@@ -129,16 +129,21 @@ namespace MagillaStream.ViewModels
             AddStreamTargetCommand = ReactiveCommand.Create<OutputGroup>(outputGroup =>
             {
                 Logger.Debug($"Adding StreamTarget to OutputGroup: {outputGroup.Name}");
-                outputGroup.StreamTargets.Add(new StreamTarget { Url = "New Target URL", StreamKey = "New Stream Key" });
+                outputGroup.StreamTargets.Add(new StreamTarget(RemoveStreamTargetCommand) { Url = "New Target URL", StreamKey = "New Stream Key" });
             });
 
-            // Handle tuple binding for removing stream target
-            RemoveStreamTargetCommand = ReactiveCommand.Create<(OutputGroup, StreamTarget)>(tuple =>
+            RemoveStreamTargetCommand = ReactiveCommand.Create<StreamTarget>(streamTarget =>
             {
-                var (outputGroup, streamTarget) = tuple;
-                Logger.Debug($"Removing StreamTarget from OutputGroup: {outputGroup.Name}");
-                outputGroup.StreamTargets.Remove(streamTarget);
+                var group = OutputGroups.FirstOrDefault(g => g.StreamTargets.Contains(streamTarget));
+                if (group != null)
+                {
+                    Logger.Debug($"Removing StreamTarget from OutputGroup: {group.Name}");
+                    group.StreamTargets.Remove(streamTarget);
+                }
             });
+
+            // Initialize the OutputGroups collection
+            OutputGroups = new ObservableCollection<OutputGroup>();
 
             LoadLastUsedProfile();
         }
@@ -194,7 +199,7 @@ namespace MagillaStream.ViewModels
 
             OutputGroups.Clear();
             Logger.Debug("Cleared OutputGroups.");
-            
+
             foreach (var group in profile.OutputGroups)
             {
                 OutputGroups.Add(group);

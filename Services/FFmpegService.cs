@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using MagillaStream.Models;
 
 namespace MagillaStream.Services
@@ -63,7 +64,7 @@ namespace MagillaStream.Services
             }
 
             // Tee output for this group to all StreamTargets
-            string teeCommand = CreateTeeCommand(group.StreamTargets);
+            string teeCommand = CreateTeeCommand(group.StreamTargets.ToList());
             command += $" -f tee {teeCommand}";
 
             return command;

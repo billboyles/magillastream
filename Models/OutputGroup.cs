@@ -1,16 +1,36 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Reactive;
+using ReactiveUI;
 
 namespace MagillaStream.Models
 {
     public class OutputGroup
     {
-        public string Name { get; set; } = string.Empty;  // The name of the output group
-        public bool ForwardOriginal { get; set; } = false;  // Indicates if the original stream is forwarded without re-encoding
-        public List<StreamTarget> StreamTargets { get; set; } = new List<StreamTarget>();  // 0 or more output Urls
-        public StreamSettings? StreamSettings { get; set; }  // Encoding settings if not forwarding the original stream
+        public string Name { get; set; } = string.Empty;
+        public bool ForwardOriginal { get; set; } = false;
+        public ObservableCollection<StreamTarget> StreamTargets { get; set; } = new ObservableCollection<StreamTarget>();
+        public StreamSettings? StreamSettings { get; set; }
 
-        // Validation method to check that either ForwardOriginal is true or EncodingSettings exists
+        // Commands with OutputGroup as parameter
+        public ReactiveCommand<OutputGroup, Unit> AddStreamTargetCommand { get; set; }
+        public ReactiveCommand<OutputGroup, Unit> RemoveOutputGroupCommand { get; set; }
+        public ReactiveCommand<StreamTarget, Unit> RemoveStreamTargetCommand { get; set; }
+
+        // Constructor accepting commands with parameters
+        public OutputGroup(ReactiveCommand<OutputGroup, Unit> addStreamTargetCommand,
+                           ReactiveCommand<OutputGroup, Unit> removeOutputGroupCommand,
+                           ReactiveCommand<StreamTarget, Unit> removeStreamTargetCommand)
+        {
+            AddStreamTargetCommand = addStreamTargetCommand;
+            RemoveOutputGroupCommand = removeOutputGroupCommand;
+            RemoveStreamTargetCommand = removeStreamTargetCommand;
+
+            // Create a default stream target and attach the remove command
+            StreamTargets.Add(new StreamTarget(RemoveStreamTargetCommand));
+        }
+
+        // Method to validate that the group has valid settings
         public void Validate()
         {
             if (!ForwardOriginal && StreamSettings == null)

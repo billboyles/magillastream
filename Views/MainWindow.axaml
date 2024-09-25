@@ -3,9 +3,9 @@
         xmlns:vm="clr-namespace:MagillaStream.ViewModels"
         xmlns:converters="clr-namespace:MagillaStream.Converters"
         x:Class="MagillaStream.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
         Title="MagillaStream" Width="1000" Height="800"
-        Background="Black">
+        Background="Black"
+        x:DataType="vm:MainWindowViewModel">
 
     <Window.Resources>
         <!-- Registering the IsEmptyToBooleanConverter -->
@@ -57,6 +57,7 @@
 
                 <TextBlock Text="Current Profile" Margin="0,30,0,5" Foreground="White"/>
                 <TextBlock Text="{Binding LastUsedProfile, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Margin="0,0,0,15" Foreground="White"/>
+                
             </StackPanel>
 
             <!-- Section for Stream Settings -->
@@ -136,17 +137,9 @@
                                                 <TextBox Text="{Binding StreamKey, Mode=TwoWay}" Width="100" />
 
                                                 <!-- Remove Stream Target Button -->
-                                                <Button Content="Remove Stream Target" 
-                                                        Command="{Binding DataContext.RemoveStreamTargetCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
-                                                    <Button.CommandParameter>
-                                                        <MultiBinding Converter="{StaticResource TupleConverter}">
-                                                            <Binding />
-                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType={x:Type ItemsControl}}" />
-                                                        </MultiBinding>
-                                                    </Button.CommandParameter>
-                                                    <ToolTip.Tip>
-                                                        <TextBlock Text="Remove this stream target." />
-                                                    </ToolTip.Tip>
+                                                <Button Content="Remove Stream Target"
+                                                        Command="{Binding RemoveStreamTargetCommand}"
+                                                        CommandParameter="{Binding}">
                                                 </Button>
 
                                             </StackPanel>
@@ -156,20 +149,13 @@
 
                                 <!-- Add Stream Target Button -->
                                 <Button Content="Add Stream Target"
-                                        Command="{Binding DataContext.AddStreamTargetCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                        CommandParameter="{Binding}">
-                                    <ToolTip.Tip>
-                                        <TextBlock Text="Add a new stream target to this output group." />
-                                    </ToolTip.Tip>
+                                        Command="{Binding AddStreamTargetCommand}">
                                 </Button>
 
                                 <!-- Remove Output Group Button -->
                                 <Button Content="Remove Output Group"
-                                        Command="{Binding DataContext.RemoveOutputGroupCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                        Command="{Binding RemoveOutputGroupCommand}"
                                         CommandParameter="{Binding}">
-                                    <ToolTip.Tip>
-                                        <TextBlock Text="Remove this output group." />
-                                    </ToolTip.Tip>
                                 </Button>
 
                             </StackPanel>
