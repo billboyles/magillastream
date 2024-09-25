@@ -202,6 +202,17 @@ namespace MagillaStream.ViewModels
 
             foreach (var group in profile.OutputGroups)
             {
+                // Recreate the commands for each output group
+                group.AddStreamTargetCommand = AddStreamTargetCommand;
+                group.RemoveOutputGroupCommand = RemoveOutputGroupCommand;
+                group.RemoveStreamTargetCommand = RemoveStreamTargetCommand;
+
+                // Recreate commands for each StreamTarget in the group
+                foreach (var target in group.StreamTargets)
+                {
+                    target.RemoveStreamTargetCommand = RemoveStreamTargetCommand;
+                }
+        
                 OutputGroups.Add(group);
                 Logger.Debug($"Added OutputGroup: {group.Name}");
             }

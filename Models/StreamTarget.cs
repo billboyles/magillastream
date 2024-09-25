@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Reactive;
 using ReactiveUI;
 
@@ -11,6 +12,7 @@ namespace MagillaStream.Models
         public string Template { get; set; } = string.Empty;  // The Url template for generating the full Url
 
         // Proxy for the RemoveStreamTargetCommand from MainWindowViewModel
+        [JsonIgnore]
         public ReactiveCommand<StreamTarget, Unit> RemoveStreamTargetCommand { get; set; }
 
         // Constructor with a command proxy

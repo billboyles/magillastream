@@ -149,7 +149,8 @@
 
                                 <!-- Add Stream Target Button -->
                                 <Button Content="Add Stream Target"
-                                        Command="{Binding AddStreamTargetCommand}">
+                                        Command="{Binding AddStreamTargetCommand}"
+                                        CommandParameter="{Binding}">
                                 </Button>
 
                                 <!-- Remove Output Group Button -->

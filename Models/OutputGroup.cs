@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 using System.Reactive;
 using ReactiveUI;
 
@@ -13,8 +14,11 @@ namespace MagillaStream.Models
         public StreamSettings? StreamSettings { get; set; }
 
         // Commands with OutputGroup as parameter
+        [JsonIgnore]
         public ReactiveCommand<OutputGroup, Unit> AddStreamTargetCommand { get; set; }
+        [JsonIgnore]
         public ReactiveCommand<OutputGroup, Unit> RemoveOutputGroupCommand { get; set; }
+        [JsonIgnore]
         public ReactiveCommand<StreamTarget, Unit> RemoveStreamTargetCommand { get; set; }
 
         // Constructor accepting commands with parameters
