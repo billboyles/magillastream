@@ -240,7 +240,7 @@
                                                         <TextBlock Text="Enter the stream key for the target URL." />
                                                     </ToolTip.Tip>
                                                 </TextBox>
-                                                <Button Content="Remove" Command="{Binding RemoveStreamTargetCommand}" CommandParameter="{Binding}" Width="100" Margin="5">
+                                                <Button Content="Remove" Command="{Binding RemoveStreamTargetCommand}" CommandParameter="{Binding}" Width="100" Background="#DB4437" Foreground="White" Margin="5">
                                                     <ToolTip.Tip>
                                                         <TextBlock Text="Remove this stream target." />
                                                     </ToolTip.Tip>
@@ -259,13 +259,13 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Button Content="Add Stream Target" Command="{Binding AddStreamTargetCommand}" CommandParameter="{Binding}" Width="200" Margin="10,0" Grid.Column="1" HorizontalAlignment="Center">
+                                    <Button Content="Add Stream Target" Command="{Binding AddStreamTargetCommand}" CommandParameter="{Binding}" Width="200" Background="#4285F4" Foreground="White" Margin="10,0" Grid.Column="1" HorizontalAlignment="Center">
                                         <ToolTip.Tip>
                                             <TextBlock Text="Add a new stream target to the output group." />
                                         </ToolTip.Tip>
                                     </Button>
                                     
-                                    <Button Content="Remove Output Group" Command="{Binding RemoveOutputGroupCommand}" CommandParameter="{Binding}" Width="200" Margin="10,0" Grid.Column="2" HorizontalAlignment="Center">
+                                    <Button Content="Remove Output Group" Command="{Binding RemoveOutputGroupCommand}" CommandParameter="{Binding}" Width="200" Background="#DB4437" Foreground="White" Margin="10,0" Grid.Column="2" HorizontalAlignment="Center">
                                         <ToolTip.Tip>
                                             <TextBlock Text="Remove this output group." />
                                         </ToolTip.Tip>
