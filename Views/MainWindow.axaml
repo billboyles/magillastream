@@ -3,7 +3,7 @@
         xmlns:vm="clr-namespace:MagillaStream.ViewModels"
         xmlns:converters="clr-namespace:MagillaStream.Converters"
         x:Class="MagillaStream.Views.MainWindow"
-        Title="MagillaStream" Width="1000" Height="850"
+        Title="MagillaStream" Width="1000" Height="700"
         Background="Black"
         x:DataType="vm:MainWindowViewModel">
 
@@ -28,30 +28,66 @@
         <StackPanel Grid.Column="0" Margin="10" VerticalAlignment="Top">
             <!-- Profile Management Buttons -->
             <StackPanel Margin="0, 0, 0, 20">
-                <TextBlock Text="Profile Management" FontWeight="Bold" Foreground="White" FontSize="18" Margin="0, 0, 0, 10" />
-                <Button Content="Create Profile" Command="{Binding CreateProfileCommand}" Width="200" Background="#4285F4" Foreground="White" Margin="0,8"/>
-                <Button Content="Load Profile" Command="{Binding LoadProfileCommand}" Width="200" Background="#4285F4" Foreground="White" Margin="0,8"/>
-                <Button Content="Delete Profile" Command="{Binding DeleteProfileCommand}" Width="200" Background="#DB4437" Foreground="White" Margin="0,8"/>
-                <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" Width="200" Background="#0F9D58" Foreground="White" Margin="0,8"/>
+                <TextBlock Text="Profile Management" FontWeight="Bold" Foreground="White" FontSize="18" Margin="0, 0, 0, 10"/>
+                <Button Content="Create Profile" Command="{Binding CreateProfileCommand}" Width="200" Background="#4285F4" Foreground="White" Margin="0,8">
+                    <ToolTip.Tip>
+                        <TextBlock Text="Create a new profile for stream settings." />
+                    </ToolTip.Tip>
+                </Button>
+                <Button Content="Load Profile" Command="{Binding LoadProfileCommand}" Width="200" Background="#4285F4" Foreground="White" Margin="0,8">
+                    <ToolTip.Tip>
+                        <TextBlock Text="Load an existing profile from saved profiles." />
+                    </ToolTip.Tip>
+                </Button>
+                <Button Content="Delete Profile" Command="{Binding DeleteProfileCommand}" Width="200" Background="#DB4437" Foreground="White" Margin="0,8">
+                    <ToolTip.Tip>
+                        <TextBlock Text="Delete the currently loaded profile." />
+                    </ToolTip.Tip>
+                </Button>
+                <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" Width="200" Background="#0F9D58" Foreground="White" Margin="0,8">
+                    <ToolTip.Tip>
+                        <TextBlock Text="Save the current profile settings." />
+                    </ToolTip.Tip>
+                </Button>
                 <TextBlock Text="Current Profile" Margin="0,30,0,5" Foreground="White"/>
                 <TextBlock Text="{Binding LastUsedProfile, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Margin="0,0,0,15" Foreground="White"/>
             </StackPanel>
 
             <!-- Section for Stream Settings -->
             <StackPanel>
-                <TextBlock Text="Stream Settings" FontWeight="Bold" Foreground="White" FontSize="18" Margin="0, 0, 0, 10" />
+                <TextBlock Text="Stream Settings" FontWeight="Bold" Foreground="White" FontSize="18" Margin="0, 0, 0, 10"/>
                 <TextBlock Text="Incoming Stream URL" Margin="0,0,0,5" Foreground="White"/>
-                <TextBox Text="{Binding IncomingURL, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Watermark="Enter incoming URL here..." Margin="0,0,0,15"/>
-                <CheckBox Content="Generate PTS" IsChecked="{Binding GeneratePTS, Mode=TwoWay}" Margin="0,10,0,20" Foreground="White"/>
+                <TextBox Text="{Binding IncomingURL, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Watermark="Enter incoming URL here..." Margin="0,0,0,15">
+                    <ToolTip.Tip>
+                        <TextBlock Text="The URL of the incoming stream." />
+                    </ToolTip.Tip>
+                </TextBox>
+                <CheckBox Content="Generate PTS" IsChecked="{Binding GeneratePTS, Mode=TwoWay}" Margin="0,10,0,20" Foreground="White">
+                    <ToolTip.Tip>
+                        <TextBlock Text="Enable or disable PTS (Presentation Time Stamp) generation." />
+                    </ToolTip.Tip>
+                </CheckBox>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <Button Content="Create Output Group" Command="{Binding AddOutputGroupCommand, Mode=TwoWay}" Width="200" Background="Gray" Foreground="White" Grid.Row="0" Margin="0,10, 0, 5"/>
-                    <Button Content="Start Stream" Width="200" Background="#0F9D58" Foreground="White" Grid.Row="1" Margin="0,30,0,10"/>
-                    <Button Content="Stop Stream" Width="200" Background="#DB4437" Foreground="White" Grid.Row="2" Margin="0,5,0,10"/>
+                    <Button Content="Create Output Group" Command="{Binding AddOutputGroupCommand, Mode=TwoWay}" Width="200" Background="Gray" Foreground="White" Grid.Row="0" Margin="0,10, 0, 5">
+                        <ToolTip.Tip>
+                            <TextBlock Text="Create a new output group for streaming." />
+                        </ToolTip.Tip>
+                    </Button>
+                    <Button Content="Start Stream" Width="200" Background="#0F9D58" Foreground="White" Grid.Row="1" Margin="0,30,0,10">
+                        <ToolTip.Tip>
+                            <TextBlock Text="Start streaming with the current settings." />
+                        </ToolTip.Tip>
+                    </Button>
+                    <Button Content="Stop Stream" Width="200" Background="#DB4437" Foreground="White" Grid.Row="2" Margin="0,5,0,10">
+                        <ToolTip.Tip>
+                            <TextBlock Text="Stop the current stream." />
+                        </ToolTip.Tip>
+                    </Button>
                 </Grid>
             </StackPanel>
         </StackPanel>
@@ -71,31 +107,119 @@
                         <Border BorderBrush="Gray" BorderThickness="1" Margin="10" Padding="10">
                             <StackPanel>
                                 <!-- Group Name -->
-                                <TextBlock Text="Group Name" FontWeight="Bold" Margin="0,0,0,5"/>
-                                <TextBox Text="{Binding Name, Mode=TwoWay}" Width="200" Margin="0,5"/>
-                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Group Name:" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding Name, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
+                                        <ToolTip.Tip>
+                                            <TextBlock Text="Enter the name of the output group." />
+                                        </ToolTip.Tip>
+                                    </TextBox>
+                                </Grid>
+
                                 <!-- Forward Original Toggle -->
-                                <CheckBox Content="Forward Original" IsChecked="{Binding ForwardOriginal, Mode=TwoWay}" Margin="0,5"/>
-                                
+                                <CheckBox Content="Forward Original" IsChecked="{Binding ForwardOriginal, Mode=TwoWay}" Margin="0,5">
+                                    <ToolTip.Tip>
+                                        <TextBlock Text="Forward the original stream without encoding." />
+                                    </ToolTip.Tip>
+                                </CheckBox>
+
                                 <!-- Stream Settings Section -->
                                 <TextBlock Text="Stream Settings" FontWeight="Bold" Margin="0,10,0,5"/>
 
                                 <!-- Stream Settings Fields -->
                                 <StackPanel Orientation="Vertical" Margin="0,5">
-                                    <TextBlock Text="Video Encoder" />
-                                    <TextBox Text="{Binding StreamSettings.VideoEncoder, Mode=TwoWay}" Width="200" Margin="0,5"/>
-                                    <TextBlock Text="Encoder Preset" />
-                                    <TextBox Text="{Binding StreamSettings.EncoderPreset, Mode=TwoWay}" Width="200" Margin="0,5"/>
-                                    <TextBlock Text="Resolution" />
-                                    <TextBox Text="{Binding StreamSettings.Resolution, Mode=TwoWay}" Width="200" Margin="0,5"/>
-                                    <TextBlock Text="FPS" />
-                                    <TextBox Text="{Binding StreamSettings.Fps, Mode=TwoWay}" Width="200" Margin="0,5"/>
-                                    <TextBlock Text="Video Bitrate" />
-                                    <TextBox Text="{Binding StreamSettings.Bitrate, Mode=TwoWay}" Width="200" Margin="0,5"/>
-                                    <TextBlock Text="Audio Codec" />
-                                    <TextBox Text="{Binding StreamSettings.AudioCodec, Mode=TwoWay}" Width="200" Margin="0,5"/>
-                                    <TextBlock Text="Audio Bitrate" />
-                                    <TextBox Text="{Binding StreamSettings.AudioBitrate, Mode=TwoWay}" Width="200" Margin="0,5"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Video Encoder:" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <ComboBox SelectedItem="{Binding StreamSettings.VideoEncoder, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
+                                            <ComboBoxItem Content="libx264"/>
+                                            <ComboBoxItem Content="libvpx"/>
+                                            <ComboBoxItem Content="libx265"/>
+                                            <ToolTip.Tip>
+                                                <TextBlock Text="Select the video encoder to use." />
+                                            </ToolTip.Tip>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Resolution:" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <ComboBox SelectedItem="{Binding StreamSettings.Resolution, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
+                                            <ComboBoxItem Content="640x360"/>
+                                            <ComboBoxItem Content="854x480"/>
+                                            <ComboBoxItem Content="1280x720"/>
+                                            <ComboBoxItem Content="1920x1080"/>
+                                            <ComboBoxItem Content="2560x1440"/>
+                                            <ComboBoxItem Content="3840x2160"/>
+                                            <ToolTip.Tip>
+                                                <TextBlock Text="Select the resolution for the output stream." />
+                                            </ToolTip.Tip>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="FPS:" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <TextBox Text="{Binding StreamSettings.Fps, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
+                                            <ToolTip.Tip>
+                                                <TextBlock Text="Set the frames per second (FPS) for the stream." />
+                                            </ToolTip.Tip>
+                                        </TextBox>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Video Bitrate:" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <TextBox Text="{Binding StreamSettings.Bitrate, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
+                                            <ToolTip.Tip>
+                                                <TextBlock Text="Set the video bitrate for the stream (e.g., 6000k)." />
+                                            </ToolTip.Tip>
+                                        </TextBox>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Audio Codec:" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <ComboBox SelectedItem="{Binding StreamSettings.AudioCodec, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
+                                            <ComboBoxItem Content="aac"/>
+                                            <ComboBoxItem Content="mp3"/>
+                                            <ToolTip.Tip>
+                                                <TextBlock Text="Select the audio codec for the stream." />
+                                            </ToolTip.Tip>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Audio Bitrate:" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <TextBox Text="{Binding StreamSettings.AudioBitrate, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
+                                            <ToolTip.Tip>
+                                                <TextBlock Text="Set the audio bitrate for the stream (e.g., 192k)." />
+                                            </ToolTip.Tip>
+                                        </TextBox>
+                                    </Grid>
                                 </StackPanel>
 
                                 <!-- Stream Targets Section -->
@@ -105,20 +229,49 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" Margin="0,5">
                                                 <TextBlock Text="URL" Width="60"/>
-                                                <TextBox Text="{Binding Url, Mode=TwoWay}" Width="150" Margin="0,5"/>
+                                                <TextBox Text="{Binding Url, Mode=TwoWay}" Width="150" Margin="0,5">
+                                                    <ToolTip.Tip>
+                                                        <TextBlock Text="Enter the stream target URL." />
+                                                    </ToolTip.Tip>
+                                                </TextBox>
                                                 <TextBlock Text="Key" Width="50"/>
-                                                <TextBox Text="{Binding StreamKey, Mode=TwoWay}" Width="100" Margin="0,5"/>
-                                                <Button Content="Remove" Command="{Binding RemoveStreamTargetCommand}" CommandParameter="{Binding}" Width="100" Margin="5"/>
+                                                <TextBox Text="{Binding StreamKey, Mode=TwoWay}" Width="100" Margin="0,5">
+                                                    <ToolTip.Tip>
+                                                        <TextBlock Text="Enter the stream key for the target URL." />
+                                                    </ToolTip.Tip>
+                                                </TextBox>
+                                                <Button Content="Remove" Command="{Binding RemoveStreamTargetCommand}" CommandParameter="{Binding}" Width="100" Margin="5">
+                                                    <ToolTip.Tip>
+                                                        <TextBlock Text="Remove this stream target." />
+                                                    </ToolTip.Tip>
+                                                </Button>
                                             </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
                                 <!-- Add/Remove Buttons for Group -->
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10,10,0,0">
-                                    <Button Content="Add Stream Target" Command="{Binding AddStreamTargetCommand}" CommandParameter="{Binding}" Width="150" Margin="0,5"/>
-                                    <Button Content="Remove Output Group" Command="{Binding RemoveOutputGroupCommand}" CommandParameter="{Binding}" Width="150" Margin="0,5"/>
-                                </StackPanel>
+                                <Grid Margin="10,10,0,0" HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Content="Add Stream Target" Command="{Binding AddStreamTargetCommand}" CommandParameter="{Binding}" Width="200" Margin="10,0" Grid.Column="1" HorizontalAlignment="Center">
+                                        <ToolTip.Tip>
+                                            <TextBlock Text="Add a new stream target to the output group." />
+                                        </ToolTip.Tip>
+                                    </Button>
+                                    
+                                    <Button Content="Remove Output Group" Command="{Binding RemoveOutputGroupCommand}" CommandParameter="{Binding}" Width="200" Margin="10,0" Grid.Column="2" HorizontalAlignment="Center">
+                                        <ToolTip.Tip>
+                                            <TextBlock Text="Remove this output group." />
+                                        </ToolTip.Tip>
+                                    </Button>
+                                </Grid>
+
                             </StackPanel>
                         </Border>
                     </DataTemplate>
