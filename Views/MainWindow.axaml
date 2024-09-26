@@ -227,25 +227,39 @@
                                 <ItemsControl ItemsSource="{Binding StreamTargets}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="0,5">
-                                                <TextBlock Text="URL" Width="60"/>
-                                                <TextBox Text="{Binding Url, Mode=TwoWay}" Width="150" Margin="0,5">
+                                            <Grid Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/> <!-- Label column for URL -->
+                                                    <ColumnDefinition Width="1*"/>   <!-- TextBox for URL -->
+                                                    <ColumnDefinition Width="Auto"/> <!-- Label column for Key -->
+                                                    <ColumnDefinition Width="1*"/>   <!-- TextBox for StreamKey -->
+                                                    <ColumnDefinition Width="Auto"/> <!-- Remove button -->
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- URL Label and TextBox -->
+                                                <TextBlock Text="URL" VerticalAlignment="Center" Grid.Column="0" Margin="0,0,5,0"/> <!-- Add margin for space -->
+                                                <TextBox Text="{Binding Url, Mode=TwoWay}" Margin="0,5" Grid.Column="1">
                                                     <ToolTip.Tip>
                                                         <TextBlock Text="Enter the stream target URL." />
                                                     </ToolTip.Tip>
                                                 </TextBox>
-                                                <TextBlock Text="Key" Width="50"/>
-                                                <TextBox Text="{Binding StreamKey, Mode=TwoWay}" Width="100" Margin="0,5">
+
+                                                <!-- Stream Key Label and TextBox -->
+                                                <TextBlock Text="Key" VerticalAlignment="Center" Grid.Column="2" Margin="10,0,5,0"/> <!-- Add margin for space -->
+                                                <TextBox Text="{Binding StreamKey, Mode=TwoWay}" Margin="0,5" Grid.Column="3">
                                                     <ToolTip.Tip>
                                                         <TextBlock Text="Enter the stream key for the target URL." />
                                                     </ToolTip.Tip>
                                                 </TextBox>
-                                                <Button Content="Remove" Command="{Binding RemoveStreamTargetCommand}" CommandParameter="{Binding}" Width="100" Background="#DB4437" Foreground="White" Margin="5">
+
+                                                <!-- Remove Button -->
+                                                <Button Content="Remove" Command="{Binding RemoveStreamTargetCommand}" CommandParameter="{Binding}" 
+                                                        Width="100" Background="#DB4437" Foreground="White" Margin="10,0,5,0" Grid.Column="4">
                                                     <ToolTip.Tip>
                                                         <TextBlock Text="Remove this stream target." />
                                                     </ToolTip.Tip>
                                                 </Button>
-                                            </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
