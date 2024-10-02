@@ -29,7 +29,7 @@ namespace MagillaStream.Services
 
                         if (!string.IsNullOrEmpty(line) && line.Contains("Encoder"))
                         {
-                            encoders.Add(line);
+                            encoders.Add(line.Trim());
                         }
                     }
 
@@ -37,10 +37,10 @@ namespace MagillaStream.Services
                 }
                 else
                 {
-                    throw new System.Exception("FFmpeg process failed to start.");
+                    throw new Exception("FFmpeg process failed to start.");
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
             }
@@ -62,18 +62,20 @@ namespace MagillaStream.Services
             {
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    // Windows: Use wmic to query GPU
                     return RunSystemCommand("wmic path win32_videocontroller get name");
                 }
                 else if (Environment.OSVersion.Platform == PlatformID.Unix)
                 {
-                    // Linux: Use lspci to list PCI devices and find the GPU
-                    return RunSystemCommand("lspci | grep VGA");
-                }
-                else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
-                {
-                    // macOS: Use system_profiler to get GPU information
-                    return RunSystemCommand("system_profiler SPDisplaysDataType | grep Chipset");
+                    if (IsMacOS())
+                    {
+                        // macOS: Use system_profiler to get GPU information
+                        return RunSystemCommand("system_profiler SPDisplaysDataType | grep Chipset");
+                    }
+                    else
+                    {
+                        // Linux: Use lspci to list PCI devices and find the GPU
+                        return RunSystemCommand("lspci | grep VGA");
+                    }
                 }
             }
             catch (Exception ex)
@@ -96,13 +98,16 @@ namespace MagillaStream.Services
                 }
                 else if (Environment.OSVersion.Platform == PlatformID.Unix)
                 {
-                    // Linux: Use lscpu to get CPU info
-                    return RunSystemCommand("lscpu | grep Vendor");
-                }
-                else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
-                {
-                    // macOS: Use sysctl to get CPU info
-                    return RunSystemCommand("sysctl -n machdep.cpu.brand_string");
+                    if (IsMacOS())
+                    {
+                        // macOS: Use sysctl to get CPU info
+                        return RunSystemCommand("sysctl -n machdep.cpu.brand_string");
+                    }
+                    else
+                    {
+                        // Linux: Use lscpu to get CPU info
+                        return RunSystemCommand("lscpu | grep Vendor");
+                    }
                 }
             }
             catch (Exception ex)
@@ -113,14 +118,31 @@ namespace MagillaStream.Services
             return "Unknown";
         }
 
+        // Helper function to check if the system is running macOS
+        private static bool IsMacOS()
+        {
+            return Environment.OSVersion.Platform == PlatformID.MacOSX || (Environment.OSVersion.Platform == PlatformID.Unix && !System.IO.Directory.Exists("/proc"));
+        }
+
         // Helper function to run system commands and get the result
         private static string RunSystemCommand(string command)
         {
             try
             {
                 Process process = new Process();
-                process.StartInfo.FileName = "/bin/bash";
-                process.StartInfo.Arguments = $"-c \"{command}\"";
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    // Use cmd.exe for Windows
+                    process.StartInfo.FileName = "cmd.exe";
+                    process.StartInfo.Arguments = $"/c {command}";
+                }
+                else
+                {
+                    // Use zsh for macOS and bash for Linux
+                    process.StartInfo.FileName = IsMacOS() ? "/bin/zsh" : "/bin/bash";
+                    process.StartInfo.Arguments = $"-c \"{command}\"";
+                }
+
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
@@ -189,7 +211,6 @@ namespace MagillaStream.Services
             {
                 foreach (string encoder in encoders)
                 {
-                    // Add CPU-based AMF encoders or general-purpose ones
                     if (encoder.Contains("amf") || encoder.Contains("libx264") || encoder.Contains("libx265"))
                     {
                         filteredEncoders.Add(encoder);
