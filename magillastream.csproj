@@ -19,4 +19,10 @@
     <PackageReference Include="BouncyCastle.NetCore" Version="2.2.1" />
     <PackageReference Include="MessageBox.Avalonia" Version="3.1.6" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="FFmpeg\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

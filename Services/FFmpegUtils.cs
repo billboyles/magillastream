@@ -1,19 +1,37 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Collections.Generic;
+using MagillaStream.Utilities;
 
 namespace MagillaStream.Services
 {
     public static class FFmpegUtils
     {
+        // List of commonly used software encoders for streaming
+        private static readonly HashSet<string> CommonSoftwareEncoders = new HashSet<string>
+        {
+            "libx264", "libx265", "libvpx", "libaom-av1", // Video encoders
+            "aac", "libmp3lame", "opus"                   // Audio encoders
+        };
+
+        // List of hardware encoder prefixes to capture
+        private static readonly HashSet<string> HardwareEncoderPrefixes = new HashSet<string>
+        {
+            "nvenc", "qsv", "amf", "vaapi", "mf"          // NVIDIA, Intel QSV, AMD, VAAPI, Media Foundation
+        };
+
         // Get a list of supported encoders from FFmpeg
         public static List<string> GetAvailableEncoders()
         {
             List<string> encoders = new List<string>();
             Process ffmpeg = new Process();
 
+            // Get the correct path to the FFmpeg binary
+            string ffmpegPath = GetFFmpegPath();
+
             // Command to get the list of FFmpeg encoders
-            ffmpeg.StartInfo.FileName = "ffmpeg";
+            ffmpeg.StartInfo.FileName = ffmpegPath;
             ffmpeg.StartInfo.Arguments = "-encoders";
             ffmpeg.StartInfo.RedirectStandardOutput = true;
             ffmpeg.StartInfo.UseShellExecute = false;
@@ -23,211 +41,107 @@ namespace MagillaStream.Services
             {
                 if (ffmpeg.Start())
                 {
+                    Logger.Debug("Starting FFmpeg process to get available encoders.");
+
+                    bool captureEncoders = false;
+
                     while (!ffmpeg.StandardOutput.EndOfStream)
                     {
                         string? line = ffmpeg.StandardOutput.ReadLine();
 
-                        if (!string.IsNullOrEmpty(line) && line.Contains("Encoder"))
+                        // FFmpeg outputs a table of encoders after "Encoders:" header
+                        if (line.Contains("Encoders:"))
                         {
-                            encoders.Add(line.Trim());
+                            captureEncoders = true;
+                            continue;
+                        }
+
+                        // Capture video and audio encoders from valid lines
+                        if (captureEncoders && !string.IsNullOrWhiteSpace(line) &&
+                            (line.StartsWith(" V") || line.StartsWith(" A")) && !line.Contains("="))
+                        {
+                            // Extract the encoder name (second column)
+                            var encoderName = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1];
+
+                            // Filter relevant software encoders or hardware encoders
+                            if (IsRelevantEncoder(encoderName))
+                            {
+                                encoders.Add(encoderName);
+                                Logger.Debug($"Found encoder: {encoderName}");
+                            }
                         }
                     }
 
                     ffmpeg.WaitForExit();
+                    Logger.Debug("FFmpeg process completed.");
                 }
                 else
                 {
                     throw new Exception("FFmpeg process failed to start.");
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
 
-            // Detect the CPU and GPU vendors using system commands
-            string cpuVendor = DetectCpuVendor();
-            string gpuVendor = DetectGpuVendor();
-
-            // Filter encoders based on detected CPU and GPU
-            List<string> filteredEncoders = FilterEncodersByHardware(cpuVendor, gpuVendor, encoders);
-
-            return filteredEncoders;
-        }
-
-        // Detects the GPU vendor based on the operating system
-        private static string DetectGpuVendor()
-        {
-            try
-            {
-                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                // Log the final list of encoders that will be added to the ComboBox
+                Logger.Debug("Final list of encoders for ComboBox:");
+                foreach (var encoder in encoders)
                 {
-                    return RunSystemCommand("wmic path win32_videocontroller get name");
-                }
-                else if (Environment.OSVersion.Platform == PlatformID.Unix)
-                {
-                    if (IsMacOS())
-                    {
-                        // macOS: Use system_profiler to get GPU information
-                        return RunSystemCommand("system_profiler SPDisplaysDataType | grep Chipset");
-                    }
-                    else
-                    {
-                        // Linux: Use lspci to list PCI devices and find the GPU
-                        return RunSystemCommand("lspci | grep VGA");
-                    }
+                    Logger.Debug(encoder);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error detecting GPU: {ex.Message}");
+                Logger.Error($"Error getting FFmpeg encoders: {ex.Message}");
             }
 
-            return "Unknown";
+            return encoders;
         }
 
-        // Detects the CPU vendor based on the operating system
-        private static string DetectCpuVendor()
+        // Check if the encoder is relevant (either a common streaming software encoder or hardware encoder)
+        private static bool IsRelevantEncoder(string encoderName)
         {
-            try
+            // Check if it's a common software encoder
+            if (CommonSoftwareEncoders.Contains(encoderName))
             {
-                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                {
-                    // Windows: Use environment variables
-                    return Environment.GetEnvironmentVariable("PROCESSOR_IDENTIFIER") ?? "Unknown";
-                }
-                else if (Environment.OSVersion.Platform == PlatformID.Unix)
-                {
-                    if (IsMacOS())
-                    {
-                        // macOS: Use sysctl to get CPU info
-                        return RunSystemCommand("sysctl -n machdep.cpu.brand_string");
-                    }
-                    else
-                    {
-                        // Linux: Use lscpu to get CPU info
-                        return RunSystemCommand("lscpu | grep Vendor");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error detecting CPU: {ex.Message}");
+                return true;
             }
 
-            return "Unknown";
+            // Check if it's a hardware encoder based on the prefix
+            foreach (var prefix in HardwareEncoderPrefixes)
+            {
+                if (encoderName.Contains(prefix))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        // Helper function to check if the system is running macOS
-        private static bool IsMacOS()
+        // Get the correct FFmpeg path depending on the operating system
+        private static string GetFFmpegPath()
         {
-            return Environment.OSVersion.Platform == PlatformID.MacOSX || (Environment.OSVersion.Platform == PlatformID.Unix && !System.IO.Directory.Exists("/proc"));
-        }
+            string basePath = AppContext.BaseDirectory;
+            string ffmpegFolder = Path.Combine(basePath, "FFmpeg");
 
-        // Helper function to run system commands and get the result
-        private static string RunSystemCommand(string command)
-        {
-            try
+            string ffmpegPath;
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                Process process = new Process();
-                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                {
-                    // Use cmd.exe for Windows
-                    process.StartInfo.FileName = "cmd.exe";
-                    process.StartInfo.Arguments = $"/c {command}";
-                }
-                else
-                {
-                    // Use zsh for macOS and bash for Linux
-                    process.StartInfo.FileName = IsMacOS() ? "/bin/zsh" : "/bin/bash";
-                    process.StartInfo.Arguments = $"-c \"{command}\"";
-                }
-
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-                process.Start();
-
-                string output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-                return output.Trim();
+                ffmpegPath = Path.Combine(ffmpegFolder, "ffmpeg.exe");
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"Error running command {command}: {ex.Message}");
-                return "Unknown";
-            }
-        }
-
-        // Filters encoders by detected CPU and GPU vendors
-        private static List<string> FilterEncodersByHardware(string cpuVendor, string gpuVendor, List<string> encoders)
-        {
-            List<string> filteredEncoders = new List<string>();
-
-            // GPU-based filtering
-            if (gpuVendor.Contains("NVIDIA"))
-            {
-                foreach (string encoder in encoders)
-                {
-                    if (encoder.Contains("nvenc"))  // NVIDIA NVENC encoders
-                    {
-                        filteredEncoders.Add(encoder);
-                    }
-                }
-            }
-            else if (gpuVendor.Contains("AMD") || gpuVendor.Contains("Advanced Micro Devices"))
-            {
-                foreach (string encoder in encoders)
-                {
-                    if (encoder.Contains("amf"))  // AMD AMF encoders
-                    {
-                        filteredEncoders.Add(encoder);
-                    }
-                }
-            }
-            else if (gpuVendor.Contains("Intel"))
-            {
-                foreach (string encoder in encoders)
-                {
-                    if (encoder.Contains("qsv"))  // Intel QSV encoders
-                    {
-                        filteredEncoders.Add(encoder);
-                    }
-                }
+                ffmpegPath = Path.Combine(ffmpegFolder, "ffmpeg"); // For Unix/Mac
             }
 
-            // CPU-based filtering (Intel/AMD/General-purpose)
-            if (cpuVendor.Contains("Intel"))
+            // Log the resolved path
+            Logger.Debug($"Resolved FFmpeg Path: {ffmpegPath}");
+
+            if (!File.Exists(ffmpegPath))
             {
-                foreach (string encoder in encoders)
-                {
-                    if (encoder.Contains("qsv"))  // Intel Quick Sync Video encoders
-                    {
-                        filteredEncoders.Add(encoder);
-                    }
-                }
-            }
-            else if (cpuVendor.Contains("AMD"))
-            {
-                foreach (string encoder in encoders)
-                {
-                    if (encoder.Contains("amf") || encoder.Contains("libx264") || encoder.Contains("libx265"))
-                    {
-                        filteredEncoders.Add(encoder);
-                    }
-                }
+                Logger.Error($"FFmpeg binary not found at: {ffmpegPath}");
+                throw new Exception($"FFmpeg binary not found at: {ffmpegPath}");
             }
 
-            // Add general-purpose CPU encoders (H.264, H.265, AV1)
-            foreach (string encoder in encoders)
-            {
-                if (encoder.Contains("libx264") || encoder.Contains("libx265") || encoder.Contains("libaom"))
-                {
-                    filteredEncoders.Add(encoder);  // Software-based encoders
-                }
-            }
-
-            return filteredEncoders;
+            return ffmpegPath;
         }
     }
 }

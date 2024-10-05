@@ -138,14 +138,16 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Video Encoder:" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <ComboBox SelectedItem="{Binding StreamSettings.VideoEncoder, Mode=TwoWay}" Width="200" HorizontalAlignment="Left" Grid.Column="1" Margin="0,5">
-                                            <ComboBoxItem Content="libx264"/>
-                                            <ComboBoxItem Content="libvpx"/>
-                                            <ComboBoxItem Content="libx265"/>
-                                            <ToolTip.Tip>
-                                                <TextBlock Text="Select the video encoder to use." />
-                                            </ToolTip.Tip>
-                                        </ComboBox>
+                                        <ComboBox ItemsSource="{Binding AvailableVideoEncoders}"
+                                            SelectedItem="{Binding StreamSettings.VideoEncoder, Mode=TwoWay}"
+                                            Width="200"
+                                            HorizontalAlignment="Left"
+                                            Grid.Column="1"
+                                            Margin="0,5">
+                                        <ToolTip.Tip>
+                                            <TextBlock Text="Select the video encoder to use." />
+                                        </ToolTip.Tip>
+                                    </ComboBox>
                                     </Grid>
 
                                     <Grid>

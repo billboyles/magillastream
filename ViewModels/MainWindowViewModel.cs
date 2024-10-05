@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using MagillaStream.Views;
 using MagillaStream.Models;
 using MagillaStream.Utilities;
+using MagillaStream.Services;
 
 namespace MagillaStream.ViewModels
 {
@@ -14,6 +15,14 @@ namespace MagillaStream.ViewModels
     {
         private readonly Window _mainWindow;
         private readonly ProfileManager _profileManager;
+
+        // Property to store available encoders
+        private ObservableCollection<string> _availableVideoEncoders;
+        public ObservableCollection<string> AvailableVideoEncoders
+        {
+            get => _availableVideoEncoders;
+            set => this.RaiseAndSetIfChanged(ref _availableVideoEncoders, value);
+        }
 
         // Directly expose LastUsedProfile from AppSettings for GUI binding
         public string LastUsedProfile
@@ -66,6 +75,9 @@ namespace MagillaStream.ViewModels
             _mainWindow = mainWindow;
             _profileManager = new ProfileManager();
 
+            // Initialize the available encoders
+            LoadAvailableEncoders();
+
             Logger.Info($"AppSettings loaded with the following values: LastUsedProfile: {AppSettings.Instance.LastUsedProfile}; FirstLaunch: {AppSettings.Instance.FirstLaunch}");
 
             // Handle showing the welcome dialog on window opened
@@ -117,7 +129,8 @@ namespace MagillaStream.ViewModels
             AddOutputGroupCommand = ReactiveCommand.Create(() =>
             {
                 Logger.Debug("AddOutputGroupCommand triggered");
-                OutputGroups.Add(new OutputGroup(AddStreamTargetCommand, RemoveOutputGroupCommand, RemoveStreamTargetCommand));
+                // Create OutputGroup with availableVideoEncoders
+                OutputGroups.Add(new OutputGroup(AddStreamTargetCommand, RemoveOutputGroupCommand, RemoveStreamTargetCommand, AvailableVideoEncoders));
             });
 
             RemoveOutputGroupCommand = ReactiveCommand.Create<OutputGroup>(outputGroup =>
@@ -202,7 +215,7 @@ namespace MagillaStream.ViewModels
                 // Ensure StreamSettings is initialized
                 if (group.StreamSettings == null)
                 {
-                    group.StreamSettings = new StreamSettings();
+                    group.StreamSettings = new StreamSettings(AvailableVideoEncoders);  // Initialize StreamSettings with available encoders
                     Logger.Debug($"StreamSettings initialized for OutputGroup: {group.Name}");
                 }
 
@@ -302,6 +315,15 @@ namespace MagillaStream.ViewModels
 
             // Show the welcome dialog
             welcomeDialog.ShowDialog(_mainWindow);
+        }
+
+        // Method to load available encoders at startup
+        private void LoadAvailableEncoders()
+        {
+            var encoders = FFmpegUtils.GetAvailableEncoders();
+
+            // Populate the available encoders in the ObservableCollection
+            AvailableVideoEncoders = new ObservableCollection<string>(encoders);
         }
     }
 }

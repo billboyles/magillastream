@@ -13,24 +13,36 @@ namespace MagillaStream.Models
         public ObservableCollection<StreamTarget> StreamTargets { get; set; } = new ObservableCollection<StreamTarget>();
         public StreamSettings? StreamSettings { get; set; }
 
+        // New property for available encoders
+        public ObservableCollection<string> AvailableVideoEncoders { get; set; } = new ObservableCollection<string>();
+
         // Commands with OutputGroup as parameter
         [JsonIgnore]
         public ReactiveCommand<OutputGroup, Unit> AddStreamTargetCommand { get; set; }
+
         [JsonIgnore]
         public ReactiveCommand<OutputGroup, Unit> RemoveOutputGroupCommand { get; set; }
+
         [JsonIgnore]
         public ReactiveCommand<StreamTarget, Unit> RemoveStreamTargetCommand { get; set; }
 
-        // Constructor accepting commands with parameters
+        // Consolidated constructor accepting commands and available encoders
         public OutputGroup(ReactiveCommand<OutputGroup, Unit> addStreamTargetCommand,
                            ReactiveCommand<OutputGroup, Unit> removeOutputGroupCommand,
-                           ReactiveCommand<StreamTarget, Unit> removeStreamTargetCommand)
+                           ReactiveCommand<StreamTarget, Unit> removeStreamTargetCommand,
+                           ObservableCollection<string> availableVideoEncoders)
         {
             AddStreamTargetCommand = addStreamTargetCommand;
             RemoveOutputGroupCommand = removeOutputGroupCommand;
             RemoveStreamTargetCommand = removeStreamTargetCommand;
 
-            // Create a default stream target and attach the remove command
+            // Assign the passed encoders to the property
+            AvailableVideoEncoders = availableVideoEncoders;
+
+            // Initialize StreamSettings using available encoders
+            StreamSettings = new StreamSettings(AvailableVideoEncoders);
+
+            // Add a default stream target
             StreamTargets.Add(new StreamTarget(RemoveStreamTargetCommand));
         }
 
